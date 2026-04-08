@@ -153,7 +153,7 @@ class UserBUS {
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port       = 587;
 
-            $mail->setFrom($mail->Username, 'CashFlow System');
+            $mail->setFrom($mail->Username, 'CashFlow');
             $mail->addAddress($toEmail);
 
             $mail->isHTML(true);

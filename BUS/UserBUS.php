@@ -148,8 +148,8 @@ class UserBUS {
             // ==========================================
             // THAY ĐỔI THÔNG TIN TÀI KHOẢN GMAIL TẠI ĐÂY
             // ==========================================
-            $mail->Username   = 'bongrong009kk@gmail.com'; 
-            $mail->Password   = 'cgsz sxjk lphy naov'; 
+            $mail->Username   = 'bongrong009kk@gmail.com';
+            $mail->Password   = 'cgsz sxjk lphy naov';
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port       = 587;
 

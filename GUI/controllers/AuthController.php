@@ -35,11 +35,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
 
-    // Luồng Thiết lập mật khẩu (thay thế cho change_password_first)
+    // Luồng Thiết lập mật khẩu (khi click link từ email)
     if ($action === 'setup_password') {
         if (!isset($_SESSION['user_id'])) { header("Location: ../pages/auth/login.php"); exit(); }
 
-        $oldPassword = $_POST['old_password']; // Lấy mật khẩu tạm thời từ form
+        $oldPassword = $_POST['old_password']; 
         $newPassword = $_POST['new_password'];
         
         if ($newPassword !== $_POST['confirm_password']) {
@@ -48,13 +48,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit();
         }
 
-        // Truyền thêm $oldPassword vào hàm của BUS
         $result = $userBUS->changePasswordFirstTime($_SESSION['user_id'], $oldPassword, $newPassword);
         
         if ($result['status']) {
-            $_SESSION['is_first_login'] = 0; 
-            $_SESSION['success'] = "Tuyệt vời! Bạn đã thiết lập mật khẩu thành công.";
-            header("Location: ../pages/analytics/dashboard.php");
+            // Hủy phiên làm việc cũ (Đăng xuất)
+            session_unset();
+            session_destroy();
+            
+            // Khởi tạo phiên làm việc mới chỉ để lưu thông báo Flash Message
+            session_start();
+            $_SESSION['success'] = "Tuyệt vời! Bạn đã thiết lập mật khẩu thành công. Vui lòng đăng nhập lại để truy cập hệ thống.";
+            header("Location: ../pages/auth/login.php");
         } else {
             $_SESSION['error'] = $result['message'];
             header("Location: ../pages/auth/setup-password.php");
@@ -96,10 +100,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header("Location: ../pages/analytics/dashboard.php");
             exit();
         }
+        
         $result = $userBUS->changePassword($_SESSION['user_id'], $_POST['old_password'], $_POST['new_password']);
-        if ($result['status']) { $_SESSION['success'] = $result['message']; } 
-        else { $_SESSION['error'] = $result['message']; }
-        header("Location: ../pages/analytics/dashboard.php");
+        
+        if ($result['status']) { 
+            // Hủy phiên làm việc cũ (Đăng xuất)
+            session_unset();
+            session_destroy();
+            
+            // Khởi tạo phiên làm việc mới
+            session_start();
+            $_SESSION['success'] = "Đổi mật khẩu thành công! Vui lòng đăng nhập lại bằng mật khẩu mới của bạn.";
+            header("Location: ../pages/auth/login.php");
+        } else { 
+            $_SESSION['error'] = $result['message']; 
+            header("Location: ../pages/analytics/dashboard.php");
+        }
         exit();
     }
 }

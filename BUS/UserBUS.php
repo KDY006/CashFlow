@@ -133,7 +133,10 @@ class UserBUS {
                        ĐĂNG NHẬP & THIẾT LẬP MẬT KHẨU
                     </a>
                 </p>
-                <p style='color: #7f8c8d; font-size: 0.9em;'>Lưu ý: Bạn KHÔNG THỂ đăng nhập bằng form cho đến khi hoàn tất bước này.</p>
+                <p style='color: #7f8c8d; font-size: 0.9em;'>
+                    Lưu ý: Bạn KHÔNG THỂ đăng nhập bằng form cho đến khi hoàn tất bước này.<br>
+                    <strong style='color: #d35400;'>Sau khi thiết lập mật khẩu thành công, hệ thống sẽ yêu cầu bạn đăng nhập lại để đảm bảo an toàn.</strong>
+                </p>
             </div>";
         
         return $this->sendMail($email, $subject, $body);

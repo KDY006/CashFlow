@@ -1,3 +1,5 @@
+-- Tạo database nếu chưa có (Tùy chọn)
+-- CREATE DATABASE IF NOT EXISTS cashflow_db DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE cashflow_db;
 
 -- 1. Bảng lưu trữ thông tin người dùng
@@ -15,7 +17,7 @@ CREATE TABLE users (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- 2. Bảng phân loại thu chi
+-- 2. Bảng phân loại thu chi (Danh mục)
 CREATE TABLE categories (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
@@ -38,18 +40,21 @@ CREATE TABLE transactions (
     FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB;
 
--- 4. Bảng thiết lập ngân sách
+-- 4. Bảng thiết lập ngân sách (Hũ tiền)
 CREATE TABLE budgets (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
-    category_id INT NULL,
-    amount DECIMAL(15, 2) NOT NULL,
-    period_month TINYINT NOT NULL CHECK (period_month BETWEEN 1 AND 12),
-    period_year YEAR NOT NULL,
+    category_id INT NOT NULL,
+    amount_limit DECIMAL(15, 2) NOT NULL,
+    month TINYINT NOT NULL CHECK (month BETWEEN 1 AND 12),
+    year YEAR NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Đảm bảo mỗi tháng 1 danh mục chỉ có 1 hũ duy nhất
+    UNIQUE KEY unique_budget (user_id, category_id, month, year),
+    
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_budget (user_id, category_id, period_month, period_year)
+    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 -- 5. Bảng phân tích AI
@@ -63,8 +68,10 @@ CREATE TABLE ai_insights (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
--- TỐI ƯU HÓA HIỆU NĂNG
+-- ==========================================
+-- TỐI ƯU HÓA HIỆU NĂNG (INDEXING)
+-- ==========================================
 CREATE INDEX idx_transactions_date ON transactions(transaction_date);
 CREATE INDEX idx_transactions_user ON transactions(user_id);
-CREATE INDEX idx_budgets_period ON budgets(period_month, period_year);
+CREATE INDEX idx_budgets_period ON budgets(month, year);
 CREATE INDEX idx_users_login_token ON users(login_token);

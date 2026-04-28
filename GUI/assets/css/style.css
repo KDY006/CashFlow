@@ -61,6 +61,7 @@ body {
     z-index: 1030;
     padding: 5px 0;
     justify-content: space-around;
+    align-items: center;
 }
 
 .bottom-nav-item {
@@ -102,4 +103,50 @@ body {
     body {
         padding-bottom: 0; /* Không cần chừa đáy trên desktop */
     }
+}
+
+/* ==========================================
+   FLOATING ACTION BUTTON (MOBILE) - BẢN HOÀN HẢO
+   ========================================== */
+.fab-container {
+    /* Tạo một vòng tròn bao bọc bên ngoài nút */
+    width: 68px;
+    height: 68px;
+    background-color: #f0f2f5; /* QUAN TRỌNG: Trùng màu nền body để tạo ảo giác khoét lỗ */
+    border-radius: 50%;
+    
+    /* Căn giữa nút xanh bên trong */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    /* Đẩy toàn bộ khối nổi lên trên thanh nav trắng */
+    margin-top: -35px; 
+    flex-shrink: 0; /* Khóa cứng kích thước */
+    z-index: 1040;
+}
+
+.fab-button {
+    /* Đây là nút xanh bên trong */
+    width: 52px;
+    height: 52px;
+    background-color: #198754 !important; /* Xanh lá CashFlow */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    box-shadow: 0 4px 12px rgba(25, 135, 84, 0.4) !important;
+    transition: transform 0.2s ease, background-color 0.2s;
+}
+
+.fab-button i {
+    font-size: 1.8rem;
+    color: #ffffff !important;
+    margin-top: 2px;
+}
+
+.fab-button:hover, .fab-button:active {
+    background-color: #146c43 !important;
+    transform: scale(0.92);
 }

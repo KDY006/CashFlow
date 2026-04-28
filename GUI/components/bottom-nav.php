@@ -8,6 +8,13 @@
         <i class="bi bi-cash-stack"></i>
         <span>Giao dịch</span>
     </a>
+
+    <!-- FAB Nổi (Chỉ hiện trên Mobile) -->
+    <div class="fab-container">
+        <a href="javascript:void(0)" onclick="openGlobalAddModal()" class="fab-button shadow">
+            <i class="bi bi-plus-lg text-white"></i>
+        </a>
+    </div>
     
     <a href="../budgets/index.php" class="bottom-nav-item <?= strpos($_SERVER['REQUEST_URI'], 'budgets') ? 'active' : '' ?>">
         <i class="bi bi-bullseye"></i>
@@ -19,3 +26,4 @@
         <span>Cố vấn AI</span>
     </a>
 </nav>
+<?php require_once __DIR__ . '/global-add-modal.php'; ?>

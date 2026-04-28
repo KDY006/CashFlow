@@ -22,11 +22,9 @@ $userId = $_SESSION['user_id'];
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h3 class="fw-bold text-dark mb-0">Giao dịch</h3>
             <div>
-                <button class="btn btn-outline-secondary rounded-pill px-3 shadow-sm me-2" onclick="openCategoryModal()">
+                <!-- CHỈ GIỮ LẠI NÚT QUẢN LÝ DANH MỤC -->
+                <button class="btn btn-outline-secondary rounded-pill px-3 shadow-sm" onclick="openCategoryModal()">
                     <i class="bi bi-tags"></i> <span class="d-none d-sm-inline ms-1">Danh mục</span>
-                </button>
-                <button class="btn btn-success rounded-pill px-3 shadow-sm" onclick="openAddModal()">
-                    <i class="bi bi-plus-lg"></i> <span class="d-none d-sm-inline ms-1">Thêm</span>
                 </button>
             </div>
         </div>
@@ -41,52 +39,54 @@ $userId = $_SESSION['user_id'];
         </div>
     </main>
 
-    <div class="modal fade" id="transactionModal" tabindex="-1" aria-hidden="true">
+    <!-- MODAL CHỈ DÀNH CHO SỬA GIAO DỊCH -->
+    <div class="modal fade" id="editTransactionModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow rounded-4">
                 <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold" id="modalTitle">Thêm Giao Dịch</h5>
+                    <h5 class="modal-title fw-bold">Sửa Giao Dịch</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <form id="transactionForm">
-                        <input type="hidden" name="action" id="formAction" value="add">
-                        <input type="hidden" name="id" id="transactionId" value="">
+                    <form id="editTransactionForm">
+                        <input type="hidden" name="action" value="edit">
+                        <input type="hidden" name="id" id="editTransactionId" value="">
 
                         <div class="mb-3">
                             <label class="form-label fw-semibold text-muted small">SỐ TIỀN (VNĐ)</label>
                             <div class="input-group input-group-lg">
                                 <span class="input-group-text bg-white text-success fw-bold">₫</span>
-                                <input type="text" id="amountDisplay" class="form-control text-end fs-4 fw-bold text-success" placeholder="0" required>
-                                <input type="hidden" name="amount" id="amount">
+                                <input type="text" id="editAmountDisplay" class="form-control text-end fs-4 fw-bold text-success" placeholder="0" required>
+                                <input type="hidden" name="amount" id="editAmount">
                             </div>
-                            <div id="amountInWords" class="form-text text-end fst-italic text-success mt-1" style="min-height: 20px;"></div>
+                            <div id="editAmountInWords" class="form-text text-end fst-italic text-success mt-1" style="min-height: 20px;"></div>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label fw-semibold text-muted small">DANH MỤC</label>
-                            <select name="category_id" id="categoryId" class="form-select form-select-lg" required>
+                            <select name="category_id" id="editCategoryId" class="form-select form-select-lg" required>
                                 <option value="" disabled selected>-- Đang tải danh mục --</option>
                             </select>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label fw-semibold text-muted small">NGÀY</label>
-                            <input type="date" name="transaction_date" id="transactionDate" class="form-control form-control-lg" required max="<?= date('Y-m-d') ?>">
+                            <input type="date" name="transaction_date" id="editTransactionDate" class="form-control form-control-lg" required max="<?= date('Y-m-d') ?>">
                         </div>
 
                         <div class="mb-4">
                             <label class="form-label fw-semibold text-muted small">GHI CHÚ</label>
-                            <textarea name="note" id="note" class="form-control" rows="2"></textarea>
+                            <textarea name="note" id="editNote" class="form-control" rows="2"></textarea>
                         </div>
 
-                        <button type="submit" class="btn btn-success btn-lg w-100 rounded-pill shadow-sm fw-bold">Lưu Giao Dịch</button>
+                        <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill shadow-sm fw-bold">Cập Nhật Giao Dịch</button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- MODAL QUẢN LÝ DANH MỤC -->
     <div class="modal fade" id="categoryModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content border-0 shadow rounded-4">
@@ -136,7 +136,7 @@ $userId = $_SESSION['user_id'];
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
-        const transModal = new bootstrap.Modal(document.getElementById('transactionModal'));
+        const editTransModal = new bootstrap.Modal(document.getElementById('editTransactionModal'));
         const catModal = new bootstrap.Modal(document.getElementById('categoryModal'));
         const toastEl = document.getElementById('liveToast');
         const toast = new bootstrap.Toast(toastEl);
@@ -147,65 +147,16 @@ $userId = $_SESSION['user_id'];
             toast.show();
         }
 
-        // --- ĐỊNH DẠNG VÀ ĐỌC SỐ TIỀN ---
-        function formatNumberInput(value) {
-            value = value.replace(/\D/g, ""); 
-            return value.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-        }
+        // --- XỬ LÝ NHẬP TIỀN CHO FORM SỬA (Gọi hàm từ Global) ---
+        const editAmountInput = document.getElementById('editAmountDisplay');
+        const editHiddenAmount = document.getElementById('editAmount');
+        const editAmountWords = document.getElementById('editAmountInWords');
 
-        function readVietnameseNumber(number) {
-            if (!number || number == 0) return "";
-            const units = ["", "một", "hai", "ba", "bốn", "năm", "sáu", "bảy", "tám", "chín"];
-            const levels = ["", "nghìn", "triệu", "tỷ", "nghìn tỷ", "triệu tỷ"];
-            
-            function readThreeDigits(num, isFirst) {
-                let hundred = Math.floor(num / 100);
-                let ten = Math.floor((num % 100) / 10);
-                let unit = num % 10;
-                let res = "";
-
-                if (hundred > 0 || !isFirst) res += units[hundred] + " trăm ";
-                if (ten > 1) {
-                    res += units[ten] + " mươi ";
-                    if (unit == 1) res += "mốt ";
-                    else if (unit == 5) res += "lăm ";
-                    else if (unit > 0) res += units[unit] + " ";
-                } else if (ten == 1) {
-                    res += "mười ";
-                    if (unit == 5) res += "lăm ";
-                    else if (unit > 0) res += units[unit] + " ";
-                } else if (unit > 0) {
-                    if (!isFirst || hundred > 0) res += "linh " + units[unit] + " ";
-                    else res += units[unit] + " ";
-                }
-                return res;
-            }
-
-            let str = "";
-            let i = 0;
-            let temp = number;
-            do {
-                let block = temp % 1000;
-                if (block > 0) {
-                    let s = readThreeDigits(block, temp < 1000);
-                    str = s + levels[i] + " " + str;
-                }
-                temp = Math.floor(temp / 1000);
-                i++;
-            } while (temp > 0);
-
-            return str.trim().charAt(0).toUpperCase() + str.trim().slice(1) + " đồng";
-        }
-
-        const amountInput = document.getElementById('amountDisplay');
-        const hiddenAmount = document.getElementById('amount');
-        const amountWords = document.getElementById('amountInWords');
-
-        amountInput.addEventListener('input', function(e) {
+        editAmountInput.addEventListener('input', function(e) {
             let rawValue = e.target.value.replace(/\D/g, "");
-            e.target.value = formatNumberInput(rawValue);
-            hiddenAmount.value = rawValue;
-            amountWords.innerText = rawValue ? readVietnameseNumber(parseInt(rawValue)) : "";
+            e.target.value = window.formatNumberInput(rawValue);
+            editHiddenAmount.value = rawValue;
+            editAmountWords.innerText = rawValue ? window.readVietnameseNumber(parseInt(rawValue)) : "";
         });
 
         // --- LOGIC GIAO DỊCH (TRANSACTIONS) ---
@@ -214,8 +165,20 @@ $userId = $_SESSION['user_id'];
             const result = await res.json();
             const list = document.getElementById('transactionList');
             
+            // XỬ LÝ EMPTY STATE (TRẠNG THÁI RỖNG) CỰC XỊN
             if (result.data.length === 0) {
-                list.innerHTML = `<div class="text-center py-5 text-muted"><i class="bi bi-receipt fs-1 mb-2"></i><p>Bạn chưa có giao dịch nào.</p></div>`; return;
+                list.innerHTML = `
+                    <div class="text-center py-5 px-3">
+                        <div class="mb-3">
+                            <i class="bi bi-wallet2 text-success" style="font-size: 3rem; opacity: 0.5;"></i>
+                        </div>
+                        <h5 class="fw-bold text-dark">Chưa có giao dịch nào</h5>
+                        <p class="text-muted mb-4">Hãy ghi chép lại khoản thu chi đầu tiên của bạn để CashFlow giúp bạn quản lý nhé!</p>
+                        <button class="btn btn-success rounded-pill px-4 py-2 shadow-sm fw-bold" onclick="openGlobalAddModal()">
+                            <i class="bi bi-plus-lg me-1"></i> Tạo giao dịch mới
+                        </button>
+                    </div>`; 
+                return;
             }
             
             let html = '<div class="list-group list-group-flush">';
@@ -243,42 +206,32 @@ $userId = $_SESSION['user_id'];
             list.innerHTML = html + '</div>';
         }
 
-        function openAddModal() {
-            document.getElementById('modalTitle').innerText = 'Thêm Giao Dịch';
-            document.getElementById('formAction').value = 'add';
-            document.getElementById('transactionForm').reset();
-            document.getElementById('transactionDate').valueAsDate = new Date();
-            document.getElementById('amountInWords').innerText = '';
-            document.getElementById('amount').value = '';
-            transModal.show();
-        }
-
         async function openEditModal(id) {
             const res = await fetch(`../../controllers/TransactionController.php?action=get&id=${id}`);
             const result = await res.json();
             if(result.status) {
-                document.getElementById('modalTitle').innerText = 'Sửa Giao Dịch';
-                document.getElementById('formAction').value = 'edit';
-                document.getElementById('transactionId').value = result.data.id;
+                document.getElementById('editTransactionId').value = result.data.id;
                 
+                // Gọi hàm format từ Global
                 const amountValue = result.data.amount.split('.')[0];
-                amountInput.value = formatNumberInput(amountValue);
-                hiddenAmount.value = amountValue;
-                amountWords.innerText = readVietnameseNumber(parseInt(amountValue));
+                editAmountInput.value = window.formatNumberInput(amountValue);
+                editHiddenAmount.value = amountValue;
+                editAmountWords.innerText = window.readVietnameseNumber(parseInt(amountValue));
 
-                document.getElementById('categoryId').value = result.data.category_id;
-                document.getElementById('transactionDate').value = result.data.transaction_date.split(' ')[0]; 
-                document.getElementById('note').value = result.data.note;
-                transModal.show();
+                document.getElementById('editCategoryId').value = result.data.category_id;
+                document.getElementById('editTransactionDate').value = result.data.transaction_date.split(' ')[0]; 
+                document.getElementById('editNote').value = result.data.note;
+                
+                editTransModal.show();
             }
         }
 
-        document.getElementById('transactionForm').addEventListener('submit', async (e) => {
+        document.getElementById('editTransactionForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const res = await fetch('../../controllers/TransactionController.php', { method: 'POST', body: new FormData(e.target) });
             const result = await res.json();
             showToast(result.message, result.status);
-            if (result.status) { transModal.hide(); fetchTransactions(); }
+            if (result.status) { editTransModal.hide(); fetchTransactions(); }
         });
 
         async function deleteTransaction(id) {
@@ -296,14 +249,14 @@ $userId = $_SESSION['user_id'];
             const res = await fetch('../../controllers/CategoryController.php?action=get_all');
             const result = await res.json();
             const list = document.getElementById('categoryList');
-            const select = document.getElementById('categoryId');
+            const editSelect = document.getElementById('editCategoryId');
             
             list.innerHTML = '';
-            select.innerHTML = '<option value="" disabled selected>-- Chọn danh mục --</option>';
+            editSelect.innerHTML = '<option value="" disabled selected>-- Chọn danh mục --</option>';
 
             result.data.forEach(c => {
                 const typeText = c.type === 'income' ? 'Thu' : 'Chi';
-                select.innerHTML += `<option value="${c.id}">${c.name} (${typeText})</option>`;
+                editSelect.innerHTML += `<option value="${c.id}">${c.name} (${typeText})</option>`;
                 list.innerHTML += `
                     <div class="list-group-item d-flex justify-content-between align-items-center px-3 py-2">
                         <div class="d-flex align-items-center">

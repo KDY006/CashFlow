@@ -1,3 +1,4 @@
+<!-- Tệp: GUI/components/bottom-nav.php -->
 <nav class="bottom-nav">
     <a href="../analytics/dashboard.php" class="bottom-nav-item <?= strpos($_SERVER['REQUEST_URI'], 'dashboard') ? 'active' : '' ?>">
         <i class="bi bi-house-door-fill"></i>
@@ -26,4 +27,8 @@
         <span>Cố vấn AI</span>
     </a>
 </nav>
+
 <?php require_once __DIR__ . '/global-add-modal.php'; ?>
+
+<!-- THÊM DÒNG NÀY ĐỂ KẾT NỐI VỚI APP.JS -->
+<script src="../../assets/js/app.js?v=<?= time() ?>"></script>

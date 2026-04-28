@@ -134,18 +134,16 @@ require_once __DIR__ . '/../../../autoload.php';
         function renderPieChart(pieData) {
             const canvas = document.getElementById('pieChart');
             const emptyState = document.getElementById('pieEmpty');
-            
             if (pieChartInstance) pieChartInstance.destroy();
 
-            // Xử lý Empty State nếu không có data
             if (!pieData.data || pieData.data.length === 0) {
-                canvas.style.display = 'none';
-                emptyState.classList.remove('d-none');
-                return;
+                canvas.style.display = 'none'; emptyState.classList.remove('d-none'); return;
             }
 
-            canvas.style.display = 'block';
-            emptyState.classList.add('d-none');
+            canvas.style.display = 'block'; emptyState.classList.add('d-none');
+
+            // GỌI HÀM TỪ APP.JS
+            const dynamicColors = pieData.labels.map(label => window.getCategoryColor(label));
 
             pieChartInstance = new Chart(canvas, {
                 type: 'doughnut',
@@ -153,7 +151,7 @@ require_once __DIR__ . '/../../../autoload.php';
                     labels: pieData.labels,
                     datasets: [{
                         data: pieData.data,
-                        backgroundColor: pieData.colors,
+                        backgroundColor: dynamicColors,
                         borderWidth: 2,
                         hoverOffset: 4
                     }]
@@ -166,7 +164,6 @@ require_once __DIR__ . '/../../../autoload.php';
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    // Hiển thị % thay vì số tiền thô
                                     let percent = pieData.percentages[context.dataIndex];
                                     return ` ${context.label}: ${pieData.formatted[context.dataIndex]} (${percent}%)`;
                                 }

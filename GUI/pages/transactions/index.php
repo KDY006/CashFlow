@@ -213,7 +213,6 @@ $userId = $_SESSION['user_id'];
         const catModal = new bootstrap.Modal(document.getElementById('categoryModal'));
         const toastEl = document.getElementById('liveToast');
         const toast = new bootstrap.Toast(toastEl);
-        
         let allData = [];
 
         function showToast(message, isSuccess = true) {
@@ -230,23 +229,31 @@ $userId = $_SESSION['user_id'];
             editHiddenAmount.value = rawValue;
         });
 
-        async function fetchTransactions() {
-            document.getElementById('loadingSpinner').classList.remove('d-none');
-            document.getElementById('dataContainer').classList.add('d-none');
-            document.getElementById('emptyState').classList.add('d-none');
-
-            const res = await fetch('../../controllers/TransactionController.php?action=get_all');
+        async function fetchCategories() {
+            const res = await fetch('../../controllers/CategoryController.php?action=get_all');
             const result = await res.json();
+            const list = document.getElementById('categoryList');
+            const editSelect = document.getElementById('editCategoryId');
             
-            if(result.status) {
-                allData = result.data.map(item => ({
-                    ...item,
-                    rawAmount: parseFloat(item.amount),
-                    rawDate: new Date(item.formatted_date.split('/').reverse().join('-')) 
-                }));
-                applyFilters(); 
-            }
-            document.getElementById('loadingSpinner').classList.add('d-none');
+            list.innerHTML = ''; editSelect.innerHTML = '<option value="" disabled selected>-- Chọn danh mục --</option>';
+
+            result.data.forEach(c => {
+                const typeText = c.type === 'income' ? 'Thu' : 'Chi';
+                
+                // GỌI HÀM TỪ APP.JS
+                const catColor = window.getCategoryColor(c.name);
+
+                editSelect.innerHTML += `<option value="${c.id}">${c.name} (${typeText})</option>`;
+                list.innerHTML += `
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-3 py-2">
+                        <div class="d-flex align-items-center">
+                            <span class="rounded-circle me-3" style="width: 16px; height: 16px; background-color: ${catColor}; display: inline-block;"></span>
+                            <span class="fw-semibold">${c.name}</span>
+                            <small class="ms-2 text-muted">(${typeText})</small>
+                        </div>
+                        <button onclick="deleteCategory(${c.id})" class="btn btn-sm text-danger"><i class="bi bi-x-circle"></i></button>
+                    </div>`;
+            });
         }
 
         function applyFilters() {
@@ -273,44 +280,29 @@ $userId = $_SESSION['user_id'];
                 if (sortOrder === 'amount_asc') return a.rawAmount - b.rawAmount;
             });
 
-            // Kiểm tra xem người dùng đang chọn hiển thị Dạng Danh sách hay Dạng Nhóm
             const viewMode = document.getElementById('viewMode').value;
-            if (viewMode === 'group') {
-                renderGroupedUI(filteredData);
-            } else {
-                renderListUI(filteredData);
-            }
+            if (viewMode === 'group') renderGroupedUI(filteredData);
+            else renderListUI(filteredData);
         }
 
-        // ==========================================
-        // UI DẠNG 1: HIỂN THỊ TỪNG GIAO DỊCH (LIST)
-        // ==========================================
         function renderListUI(data) {
             const container = document.getElementById('dataContainer');
             const emptyState = document.getElementById('emptyState');
-            
             document.getElementById('totalCountBadge').innerText = `${data.length} giao dịch`;
 
-            if (data.length === 0) {
-                container.classList.add('d-none');
-                emptyState.classList.remove('d-none');
-                return;
-            }
+            if (data.length === 0) { container.classList.add('d-none'); emptyState.classList.remove('d-none'); return; }
+            container.classList.remove('d-none'); emptyState.classList.add('d-none');
 
-            container.classList.remove('d-none');
-            emptyState.classList.add('d-none');
-
-            const incList = document.getElementById('incomeList');
-            const expList = document.getElementById('expenseList');
-            
-            let htmlInc = ''; let htmlExp = '';
-            let totalInc = 0; let totalExp = 0;
+            let htmlInc = ''; let htmlExp = ''; let totalInc = 0; let totalExp = 0;
 
             data.forEach(t => {
                 const isInc = t.category_type === 'income';
                 const sign = isInc ? '+' : '-';
-                const textClass = isInc ? 'text-success' : 'text-danger';
+                const moneyClass = isInc ? 'text-success' : 'text-danger';
                 const icon = isInc ? 'bi-arrow-down-left-circle' : 'bi-arrow-up-right-circle';
+                
+                // GỌI HÀM TỪ APP.JS
+                const catColor = window.getCategoryColor(t.category_name); 
                 
                 if (isInc) totalInc += t.rawAmount; else totalExp += t.rawAmount;
 
@@ -319,7 +311,9 @@ $userId = $_SESSION['user_id'];
                         <div class="card-body p-3">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div class="d-flex align-items-center gap-3">
-                                    <div class="fs-3 ${textClass}"><i class="bi ${icon}"></i></div>
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px; background-color: ${catColor}26; color: ${catColor};">
+                                        <i class="bi ${icon} fs-4"></i>
+                                    </div>
                                     <div>
                                         <h6 class="mb-1 fw-bold text-dark">${t.category_name}</h6>
                                         <small class="text-muted d-block">${t.formatted_date}</small>
@@ -327,7 +321,7 @@ $userId = $_SESSION['user_id'];
                                     </div>
                                 </div>
                                 <div class="text-end">
-                                    <h6 class="mb-2 fw-bold ${textClass}">${sign}${t.formatted_amount} ₫</h6>
+                                    <h6 class="mb-2 fw-bold ${moneyClass}">${sign}${t.formatted_amount} ₫</h6>
                                     <button onclick="event.stopPropagation(); deleteTransaction(${t.id})" class="btn btn-sm btn-outline-danger border-0 rounded-circle"><i class="bi bi-trash"></i></button>
                                 </div>
                             </div>
@@ -337,67 +331,42 @@ $userId = $_SESSION['user_id'];
                 if (isInc) htmlInc += cardHtml; else htmlExp += cardHtml;
             });
 
-            incList.innerHTML = htmlInc || '<div class="text-center py-4 text-muted small">Không có khoản thu nào.</div>';
-            expList.innerHTML = htmlExp || '<div class="text-center py-4 text-muted small">Không có khoản chi nào.</div>';
-            
+            document.getElementById('incomeList').innerHTML = htmlInc || '<div class="text-center py-4 text-muted small">Không có khoản thu nào.</div>';
+            document.getElementById('expenseList').innerHTML = htmlExp || '<div class="text-center py-4 text-muted small">Không có khoản chi nào.</div>';
             document.getElementById('totalIncomeText').innerText = '+' + window.formatNumberInput(totalInc.toString()) + ' ₫';
             document.getElementById('totalExpenseText').innerText = '-' + window.formatNumberInput(totalExp.toString()) + ' ₫';
         }
 
-        // ==========================================
-        // UI DẠNG 2: GOM NHÓM DANH MỤC (ACCORDION)
-        // ==========================================
         function renderGroupedUI(data) {
             const container = document.getElementById('dataContainer');
             const emptyState = document.getElementById('emptyState');
-            
             document.getElementById('totalCountBadge').innerText = `${data.length} giao dịch`;
 
-            if (data.length === 0) {
-                container.classList.add('d-none');
-                emptyState.classList.remove('d-none');
-                return;
-            }
+            if (data.length === 0) { container.classList.add('d-none'); emptyState.classList.remove('d-none'); return; }
+            container.classList.remove('d-none'); emptyState.classList.add('d-none');
 
-            container.classList.remove('d-none');
-            emptyState.classList.add('d-none');
-
-            const incList = document.getElementById('incomeList');
-            const expList = document.getElementById('expenseList');
-            
-            // 1. Chạy thuật toán Gom nhóm
             const grouped = { income: {}, expense: {} };
             let totalInc = 0; let totalExp = 0;
 
             data.forEach(t => {
-                const type = t.category_type;
-                const catName = t.category_name;
-                
-                if (!grouped[type][catName]) {
-                    grouped[type][catName] = { name: catName, total: 0, items: [] };
-                }
+                const type = t.category_type; const catName = t.category_name;
+                if (!grouped[type][catName]) grouped[type][catName] = { name: catName, total: 0, items: [] };
                 grouped[type][catName].total += t.rawAmount;
                 grouped[type][catName].items.push(t);
-                
-                if (type === 'income') totalInc += t.rawAmount;
-                else totalExp += t.rawAmount;
+                if (type === 'income') totalInc += t.rawAmount; else totalExp += t.rawAmount;
             });
 
-            // 2. Hàm vẽ HTML cho từng nhóm
             const generateGroupHtml = (groupData, isInc) => {
-                let html = '';
-                const sign = isInc ? '+' : '-';
-                const colorClass = isInc ? 'text-success' : 'text-danger';
-                const bgClass = isInc ? 'bg-success-subtle' : 'bg-danger-subtle';
-                const iconPrefix = isInc ? 'inc' : 'exp';
-
-                // Ép object thành mảng và sắp xếp các thẻ theo Tổng tiền giảm dần
+                let html = ''; const sign = isInc ? '+' : '-';
                 const sortedGroups = Object.values(groupData).sort((a, b) => b.total - a.total);
 
                 sortedGroups.forEach((grp, idx) => {
-                    const groupId = `grp_${iconPrefix}_${idx}`;
+                    const groupId = `grp_${isInc ? 'inc' : 'exp'}_${idx}`;
+                    const moneyClass = isInc ? 'text-success' : 'text-danger';
                     
-                    // Vẽ các giao dịch con ẩn bên trong
+                    // GỌI HÀM TỪ APP.JS
+                    const catColor = window.getCategoryColor(grp.name);
+                    
                     let itemsHtml = '';
                     grp.items.forEach(t => {
                         itemsHtml += `
@@ -407,20 +376,18 @@ $userId = $_SESSION['user_id'];
                                     ${t.note ? `<small class="text-muted fst-italic"><i class="bi bi-arrow-return-right me-1"></i>${t.note}</small>` : ''}
                                 </div>
                                 <div class="text-end">
-                                    <span class="fw-bold ${colorClass} small">${sign}${t.formatted_amount} ₫</span>
+                                    <span class="fw-bold ${moneyClass} small">${sign}${t.formatted_amount} ₫</span>
                                     <button onclick="event.stopPropagation(); deleteTransaction(${t.id})" class="btn btn-sm text-danger ms-2 p-0"><i class="bi bi-x-circle"></i></button>
                                 </div>
-                            </div>
-                        `;
+                            </div>`;
                     });
 
-                    // Vẽ lớp thẻ (Card) bên ngoài
                     html += `
                         <div class="card border-0 shadow-sm mb-3 rounded-4 overflow-hidden bg-white">
                             <div class="category-group-header d-flex justify-content-between align-items-center p-3" onclick="toggleAccordion('${groupId}')">
                                 <div class="d-flex align-items-center gap-3">
-                                    <div class="rounded-circle p-2 ${bgClass} ${colorClass} d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                        <i class="bi bi-folder2-open fs-5"></i>
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px; background-color: ${catColor}26; color: ${catColor};">
+                                        <i class="bi bi-folder2-open fs-4"></i>
                                     </div>
                                     <div>
                                         <h6 class="mb-0 fw-bold text-dark">${grp.name}</h6>
@@ -428,41 +395,48 @@ $userId = $_SESSION['user_id'];
                                     </div>
                                 </div>
                                 <div class="d-flex align-items-center gap-3">
-                                    <h6 class="mb-0 fw-bold ${colorClass}">${sign}${window.formatNumberInput(grp.total.toString())} ₫</h6>
+                                    <h6 class="mb-0 fw-bold ${moneyClass}">${sign}${window.formatNumberInput(grp.total.toString())} ₫</h6>
                                     <i class="bi bi-chevron-down text-muted chevron-icon fs-5" id="icon_${groupId}"></i>
                                 </div>
                             </div>
-                            <div class="category-items-container px-3 pb-2" id="${groupId}">
-                                ${itemsHtml}
-                            </div>
-                        </div>
-                    `;
+                            <div class="category-items-container px-3 pb-2" id="${groupId}">${itemsHtml}</div>
+                        </div>`;
                 });
                 return html;
             };
 
-            incList.innerHTML = generateGroupHtml(grouped.income, true) || '<div class="text-center py-4 text-muted small">Không có khoản thu nào.</div>';
-            expList.innerHTML = generateGroupHtml(grouped.expense, false) || '<div class="text-center py-4 text-muted small">Không có khoản chi nào.</div>';
-            
+            document.getElementById('incomeList').innerHTML = generateGroupHtml(grouped.income, true) || '<div class="text-center py-4 text-muted small">Không có khoản thu nào.</div>';
+            document.getElementById('expenseList').innerHTML = generateGroupHtml(grouped.expense, false) || '<div class="text-center py-4 text-muted small">Không có khoản chi nào.</div>';
             document.getElementById('totalIncomeText').innerText = '+' + window.formatNumberInput(totalInc.toString()) + ' ₫';
             document.getElementById('totalExpenseText').innerText = '-' + window.formatNumberInput(totalExp.toString()) + ' ₫';
         }
 
-        // Hàm hỗ trợ hiệu ứng xoay icon và thả danh sách
         window.toggleAccordion = function(groupId) {
             const container = document.getElementById(groupId);
             const icon = document.getElementById('icon_' + groupId);
-            
-            if (container.classList.contains('active')) {
-                container.classList.remove('active');
-                icon.classList.remove('rotate-180');
-            } else {
-                container.classList.add('active');
-                icon.classList.add('rotate-180');
-            }
+            if (container.classList.contains('active')) { container.classList.remove('active'); icon.classList.remove('rotate-180'); } 
+            else { container.classList.add('active'); icon.classList.add('rotate-180'); }
         };
 
-        // [CÁC HÀM XỬ LÝ DATABASE GIỮ NGUYÊN]
+        async function fetchTransactions() {
+            document.getElementById('loadingSpinner').classList.remove('d-none');
+            document.getElementById('dataContainer').classList.add('d-none');
+            document.getElementById('emptyState').classList.add('d-none');
+
+            const res = await fetch('../../controllers/TransactionController.php?action=get_all');
+            const result = await res.json();
+            
+            if(result.status) {
+                allData = result.data.map(item => ({
+                    ...item,
+                    rawAmount: parseFloat(item.amount),
+                    rawDate: new Date(item.formatted_date.split('/').reverse().join('-')) 
+                }));
+                applyFilters(); 
+            }
+            document.getElementById('loadingSpinner').classList.add('d-none');
+        }
+
         async function openEditModal(id) {
             const res = await fetch(`../../controllers/TransactionController.php?action=get&id=${id}`);
             const result = await res.json();
@@ -496,35 +470,9 @@ $userId = $_SESSION['user_id'];
             }
         }
 
-        async function fetchCategories() {
-            const res = await fetch('../../controllers/CategoryController.php?action=get_all');
-            const result = await res.json();
-            const list = document.getElementById('categoryList');
-            const editSelect = document.getElementById('editCategoryId');
-            
-            list.innerHTML = '';
-            editSelect.innerHTML = '<option value="" disabled selected>-- Chọn danh mục --</option>';
-
-            result.data.forEach(c => {
-                const typeText = c.type === 'income' ? 'Thu' : 'Chi';
-                editSelect.innerHTML += `<option value="${c.id}">${c.name} (${typeText})</option>`;
-                list.innerHTML += `
-                    <div class="list-group-item d-flex justify-content-between align-items-center px-3 py-2">
-                        <div class="d-flex align-items-center">
-                            <span class="badge ${c.color_class} me-2 rounded-pill">&nbsp;&nbsp;</span>
-                            <span class="fw-semibold">${c.name}</span>
-                            <small class="ms-2 text-muted">(${typeText})</small>
-                        </div>
-                        <button onclick="deleteCategory(${c.id})" class="btn btn-sm text-danger"><i class="bi bi-x-circle"></i></button>
-                    </div>`;
-            });
-        }
         function openCategoryModal() { catModal.show(); }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            fetchCategories(); 
-            fetchTransactions();
-        });
+        document.addEventListener('DOMContentLoaded', () => { fetchCategories(); fetchTransactions(); });
     </script>
 </body>
 </html>

@@ -91,6 +91,18 @@ $userId = $_SESSION['user_id'];
         const bdgModal = new bootstrap.Modal(document.getElementById('budgetModal'));
         const toastEl = document.getElementById('liveToast');
         const toast = new bootstrap.Toast(toastEl);
+
+        // --- THUẬT TOÁN ĐỒNG BỘ MÀU SẮC ---
+        function getCategoryColor(name) {
+            const colors = [
+                '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#F06292', 
+                '#AED581', '#7986CB', '#4DB6AC', '#FFB74D', '#A1887F', 
+                '#90A4AE', '#BA68C8', '#FF8A65', '#4DD0E1', '#81C784'
+            ];
+            let hash = 0;
+            for (let i = 0; i < name.length; i++) { hash = name.charCodeAt(i) + ((hash << 5) - hash); }
+            return colors[Math.abs(hash) % colors.length];
+        }
         
         function showToast(message, isSuccess = true) {
             document.getElementById('toastMessage').innerText = message;
@@ -98,7 +110,7 @@ $userId = $_SESSION['user_id'];
             toast.show();
         }
 
-        // --- ĐỊNH DẠNG VÀ ĐỌC SỐ TIỀN (Giữ nguyên từ Transaction) ---
+        // --- ĐỊNH DẠNG VÀ ĐỌC SỐ TIỀN ---
         function formatNumberInput(value) {
             value = value.replace(/\D/g, ""); 
             return value.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
@@ -109,20 +121,11 @@ $userId = $_SESSION['user_id'];
             const units = ["", "một", "hai", "ba", "bốn", "năm", "sáu", "bảy", "tám", "chín"];
             const levels = ["", "nghìn", "triệu", "tỷ", "nghìn tỷ", "triệu tỷ"];
             function readThreeDigits(num, isFirst) {
-                let hundred = Math.floor(num / 100);
-                let ten = Math.floor((num % 100) / 10);
-                let unit = num % 10;
-                let res = "";
+                let hundred = Math.floor(num / 100); let ten = Math.floor((num % 100) / 10); let unit = num % 10; let res = "";
                 if (hundred > 0 || !isFirst) res += units[hundred] + " trăm ";
-                if (ten > 1) {
-                    res += units[ten] + " mươi ";
-                    if (unit == 1) res += "mốt "; else if (unit == 5) res += "lăm "; else if (unit > 0) res += units[unit] + " ";
-                } else if (ten == 1) {
-                    res += "mười ";
-                    if (unit == 5) res += "lăm "; else if (unit > 0) res += units[unit] + " ";
-                } else if (unit > 0) {
-                    if (!isFirst || hundred > 0) res += "linh " + units[unit] + " "; else res += units[unit] + " ";
-                }
+                if (ten > 1) { res += units[ten] + " mươi "; if (unit == 1) res += "mốt "; else if (unit == 5) res += "lăm "; else if (unit > 0) res += units[unit] + " "; } 
+                else if (ten == 1) { res += "mười "; if (unit == 5) res += "lăm "; else if (unit > 0) res += units[unit] + " "; } 
+                else if (unit > 0) { if (!isFirst || hundred > 0) res += "linh " + units[unit] + " "; else res += units[unit] + " "; }
                 return res;
             }
             let str = ""; let i = 0; let temp = number;
@@ -145,21 +148,18 @@ $userId = $_SESSION['user_id'];
             amountWords.innerText = rawValue ? readVietnameseNumber(parseInt(rawValue)) : "";
         });
 
-        // --- LẤY DANH SÁCH DANH MỤC CHO THẺ SELECT ---
         async function fetchCategories() {
             const res = await fetch('../../controllers/CategoryController.php?action=get_all');
             const result = await res.json();
             const select = document.getElementById('categoryId');
             select.innerHTML = '<option value="" disabled selected>-- Chọn danh mục --</option>';
-            // Chỉ lấy các danh mục thuộc loại Chi (expense) để đặt ngân sách
             result.data.filter(c => c.type === 'expense').forEach(c => {
                 select.innerHTML += `<option value="${c.id}">${c.name}</option>`;
             });
         }
 
-        // --- LOGIC NGÂN SÁCH CHÍNH ---
         async function fetchBudgets() {
-            const pickerVal = document.getElementById('monthPicker').value; // Định dạng YYYY-MM
+            const pickerVal = document.getElementById('monthPicker').value;
             const [year, month] = pickerVal.split('-');
             
             const res = await fetch(`../../controllers/BudgetController.php?action=get_by_month&month=${month}&year=${year}`);
@@ -177,11 +177,13 @@ $userId = $_SESSION['user_id'];
                 if (pct >= 80 && pct <= 100) barColor = 'bg-warning';
                 if (pct > 100) barColor = 'bg-danger';
 
-                let uiPct = pct > 100 ? 100 : pct; // Giới hạn thanh UI ở mức 100% để không bị tràn layout
-
+                let uiPct = pct > 100 ? 100 : pct; 
                 let remainText = b.remain_amount >= 0 
                     ? `<span class="text-success small fw-semibold">Còn lại: ${b.formatted_remain}</span>`
                     : `<span class="text-danger small fw-bold">Ghi nợ: ${b.formatted_remain}</span>`;
+
+                // --- GỌI HÀM SINH MÀU TỪ TÊN DANH MỤC ---
+                const catColor = getCategoryColor(b.category_name);
 
                 html += `
                 <div class="col-12 col-md-6">
@@ -189,7 +191,8 @@ $userId = $_SESSION['user_id'];
                         <div class="card-body p-3">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <div class="d-flex align-items-center">
-                                    <span class="badge ${b.color_class} me-2 rounded-pill">&nbsp;&nbsp;</span>
+                                    <!-- ÁP DỤNG MÀU LÊN CHẤM TRÒN (BADGE) -->
+                                    <span class="rounded-circle me-2" style="width: 14px; height: 14px; background-color: ${catColor}; display: inline-block;"></span>
                                     <h6 class="mb-0 fw-bold">${b.category_name}</h6>
                                 </div>
                                 <div class="dropdown">
@@ -225,17 +228,13 @@ $userId = $_SESSION['user_id'];
             document.getElementById('modalTitle').innerText = 'Lập Hũ Ngân Sách';
             document.getElementById('formAction').value = 'add';
             document.getElementById('budgetForm').reset();
-            
-            // Lấy tháng/năm hiện hành từ input để gán vào form ẩn
             const pickerVal = document.getElementById('monthPicker').value;
             const [year, month] = pickerVal.split('-');
             document.getElementById('hiddenMonth').value = month;
             document.getElementById('hiddenYear').value = year;
-
-            document.getElementById('categoryGroup').style.display = 'block'; // Hiện ô chọn danh mục
+            document.getElementById('categoryGroup').style.display = 'block'; 
             document.getElementById('amountInWords').innerText = '';
             document.getElementById('amount').value = '';
-            
             bdgModal.show();
         }
 
@@ -243,13 +242,10 @@ $userId = $_SESSION['user_id'];
             document.getElementById('modalTitle').innerText = 'Sửa Giới Hạn Chi';
             document.getElementById('formAction').value = 'update';
             document.getElementById('budgetId').value = id;
-            
-            document.getElementById('categoryGroup').style.display = 'none'; // Ẩn ô danh mục (Không cho sửa danh mục)
-            
+            document.getElementById('categoryGroup').style.display = 'none'; 
             amountInput.value = formatNumberInput(currentLimit.toString());
             hiddenAmount.value = currentLimit;
             amountWords.innerText = readVietnameseNumber(parseInt(currentLimit));
-            
             bdgModal.show();
         }
 
@@ -271,15 +267,12 @@ $userId = $_SESSION['user_id'];
             }
         }
 
-        // Khởi tạo ngày tháng mặc định & Load dữ liệu ban đầu
         document.addEventListener('DOMContentLoaded', () => {
             const today = new Date();
             const yyyy = today.getFullYear();
             let mm = today.getMonth() + 1;
             if (mm < 10) mm = '0' + mm;
-            
             document.getElementById('monthPicker').value = `${yyyy}-${mm}`;
-            
             fetchCategories(); 
             fetchBudgets();
         });

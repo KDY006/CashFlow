@@ -64,10 +64,7 @@ class AiAdvisorBUS
             }
         }
 
-        return [
-            "status"  => true, 
-            "message" => "AI đã phân tích xong và tạo ra {$savedCount} lời khuyên mới."
-        ];
+        return ["status" => false, "message" => $aiResponse['error']];
     }
 
     /**
@@ -75,7 +72,7 @@ class AiAdvisorBUS
      */
     public function getUserInsights(int $user_id): array
     {
-        return $this->aiDal->getInsightsByUser($user_id);
+        return $this->aiDal->getInsightsByUser($user_id, 100);
     }
 
     /**
@@ -84,6 +81,17 @@ class AiAdvisorBUS
     public function markInsightAsRead(int $insight_id, int $user_id): bool
     {
         return $this->aiDal->markAsRead($insight_id, $user_id);
+    }
+
+    /**
+     * Xóa thông báo AI
+     */
+    public function deleteUserInsight(int $insight_id, int $user_id): array
+    {
+        if ($this->aiDal->deleteInsight($insight_id, $user_id)) {
+            return ["status" => true, "message" => "Đã xóa thông báo thành công."];
+        }
+        return ["status" => false, "message" => "Không thể xóa thông báo này."];
     }
 
     // =========================================================================
@@ -95,7 +103,6 @@ class AiAdvisorBUS
         $ch = curl_init($this->aiServiceUrl);
         $jsonData = json_encode($data);
 
-        // Cấu hình cURL POST request
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
@@ -103,9 +110,7 @@ class AiAdvisorBUS
             'Content-Type: application/json',
             'Content-Length: ' . strlen($jsonData)
         ]);
-        
-        // Cài đặt timeout (chờ AI xử lý tối đa 10 giây)
-        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 15); // Tăng timeout lên chút cho an toàn
 
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -113,8 +118,12 @@ class AiAdvisorBUS
         
         curl_close($ch);
 
+        // NẾU CÓ LỖI HOẶC HTTP KHÁC 200
         if ($curlError || $httpCode !== 200) {
-            return ["status" => false, "error" => $curlError ?: "HTTP Code: {$httpCode}"];
+            $decoded = json_decode($response, true);
+            // Lấy câu báo lỗi tiếng Việt từ Python, nếu không có thì báo lỗi gốc
+            $errMsg = $decoded['error'] ?? ($curlError ?: "Lỗi máy chủ AI (Code: {$httpCode})");
+            return ["status" => false, "error" => $errMsg];
         }
 
         $decoded = json_decode($response, true);

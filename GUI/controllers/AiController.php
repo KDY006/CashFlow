@@ -34,5 +34,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header("Location: ../pages/ai/advisor.php");
         exit();
     }
+
+    // Hành động 3: Xóa một lời khuyên (MỚI THÊM)
+    if ($action === 'delete_insight') {
+        $insight_id = $_POST['insight_id'] ?? 0;
+        $result = $aiBus->deleteUserInsight((int)$insight_id, $_SESSION['user_id']);
+        
+        if ($result['status']) {
+            $_SESSION['success'] = $result['message'];
+        } else {
+            $_SESSION['error'] = $result['message'];
+        }
+        
+        header("Location: ../pages/ai/advisor.php");
+        exit();
+    }
 }
 ?>

@@ -173,7 +173,7 @@ $userId = $_SESSION['user_id'];
     </div>
 
     <div class="modal fade" id="categoryModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow rounded-4">
                 <div class="modal-header border-0 bg-light">
                     <h5 class="modal-title fw-bold">Quản lý Danh mục</h5>
@@ -193,7 +193,12 @@ $userId = $_SESSION['user_id'];
                         </div>
                     </form>
                     <hr class="text-muted">
-                    <div id="categoryList" class="list-group list-group-flush border rounded-3"></div>
+                    
+                    <h6 class="fw-bold text-muted mb-3"><i class="bi bi-list-task me-1"></i>Danh sách danh mục hiện tại</h6>
+                    <div style="max-height: 250px; overflow-y: auto; padding-right: 5px;">
+                        <div id="categoryList" class="list-group list-group-flush border rounded-3"></div>
+                    </div>
+                    
                 </div>
             </div>
         </div>
@@ -471,6 +476,57 @@ $userId = $_SESSION['user_id'];
         }
 
         function openCategoryModal() { catModal.show(); }
+
+        document.getElementById('categoryForm').addEventListener('submit', async (e) => {
+            e.preventDefault(); // Ngăn trình duyệt tải lại trang
+
+            const formData = new FormData(e.target);
+            formData.append('action', 'add'); // Báo cho Controller biết đây là lệnh Thêm
+
+            try {
+                const res = await fetch('../../controllers/CategoryController.php', { 
+                    method: 'POST', 
+                    body: formData 
+                });
+                const result = await res.json();
+                
+                showToast(result.message, result.status);
+                
+                if (result.status) { 
+                    // Xóa trắng ô input và tải lại danh sách
+                    document.getElementById('catName').value = '';
+                    fetchCategories(); 
+                } 
+            } catch (error) {
+                showToast('Đã xảy ra lỗi kết nối!', false);
+            }
+        });
+
+        // 2. Xóa Danh Mục
+        async function deleteCategory(id) {
+            if(confirm('Bạn có chắc muốn xóa danh mục này? Các giao dịch thuộc danh mục này cũng có thể bị ảnh hưởng!')) {
+                const fd = new FormData(); 
+                fd.append('action', 'delete'); 
+                fd.append('id', id);
+                
+                try {
+                    const res = await fetch('../../controllers/CategoryController.php', { 
+                        method: 'POST', 
+                        body: fd 
+                    });
+                    const result = await res.json();
+                    
+                    showToast(result.message, result.status);
+                    
+                    if(result.status) {
+                        fetchCategories(); // Tải lại danh sách danh mục
+                        fetchTransactions(); // Tải lại danh sách giao dịch vì có thể bị ảnh hưởng
+                    } 
+                } catch (error) {
+                    showToast('Đã xảy ra lỗi kết nối!', false);
+                }
+            }
+        }
 
         document.addEventListener('DOMContentLoaded', () => { fetchCategories(); fetchTransactions(); });
     </script>

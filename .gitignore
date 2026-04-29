@@ -1,0 +1,20 @@
+# BỎ QUA FILE BẢO MẬT (Quan trọng nhất)
+.env
+
+# BỎ QUA THƯ VIỆN PHP (Sẽ cài lại bằng composer install)
+/vendor/
+composer.lock
+
+# BỎ QUA CÁC FILE RÁC CỦA HỆ ĐIỀU HÀNH
+.DS_Store
+Thumbs.db
+
+# BỎ QUA LOGS VÀ CACHE
+*.log
+/logs/
+/cache/
+
+# BỎ QUA THƯ VIỆN & CACHE CỦA PYTHON AI SERVICE
+/CashFlow_AI_Service/__pycache__/
+/CashFlow_AI_Service/venv/
+/CashFlow_AI_Service/env/

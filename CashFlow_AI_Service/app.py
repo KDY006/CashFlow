@@ -1,6 +1,7 @@
 import os
 import json
 from flask import Flask, request, jsonify
+from dotenv import load_dotenv
 
 # Khai báo theo chuẩn thư viện mới của Google
 from google import genai
@@ -11,7 +12,9 @@ app = Flask(__name__)
 # =========================================================================
 # CẤU HÌNH GOOGLE GEMINI API (SDK MỚI)
 # =========================================================================
-GEMINI_API_KEY = "AIzaSyCKOW5L_9quz6cxfqDdgpYHzTk95lqm4zY"
+load_dotenv(dotenv_path="../.env")
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 # Khởi tạo Client thế hệ mới
 client = genai.Client(api_key=GEMINI_API_KEY)

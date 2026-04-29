@@ -146,17 +146,19 @@ class UserBUS {
         $mail = new PHPMailer(true);
         try {
             $mail->isSMTP();
-            $mail->Host       = 'smtp.gmail.com';
+            
+            // ==========================================
+            // ĐỌC THÔNG TIN TỪ FILE .ENV (BẢO MẬT TUYỆT ĐỐI)
+            // ==========================================
+            $mail->Host       = $_ENV['MAIL_HOST'] ?? 'smtp.gmail.com';
             $mail->SMTPAuth   = true;
-            // ==========================================
-            // THAY ĐỔI THÔNG TIN TÀI KHOẢN GMAIL TẠI ĐÂY
-            // ==========================================
-            $mail->Username   = 'bongrong009kk@gmail.com';
-            $mail->Password   = 'cgsz sxjk lphy naov';
+            $mail->Username   = $_ENV['MAIL_USERNAME'];
+            $mail->Password   = $_ENV['MAIL_PASSWORD'];
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port       = 587;
+            $mail->Port       = $_ENV['MAIL_PORT'] ?? 587;
 
-            $mail->setFrom($mail->Username, 'CashFlow');
+            // Lấy tên và email người gửi từ cấu hình
+            $mail->setFrom($_ENV['MAIL_FROM_ADDRESS'], $_ENV['MAIL_FROM_NAME']);
             $mail->addAddress($toEmail);
 
             $mail->isHTML(true);
@@ -167,7 +169,9 @@ class UserBUS {
             $mail->send();
             return ["status" => true, "message" => "Email đã được gửi! Vui lòng kiểm tra hòm thư của bạn."];
         } catch (Exception $e) {
-            return ["status" => false, "message" => "Lỗi cấu hình gửi mail."];
+            // Nâng cấp thông báo lỗi để dễ debug nếu .env bị sai
+            error_log("Lỗi gửi mail: " . $mail->ErrorInfo);
+            return ["status" => false, "message" => "Lỗi cấu hình gửi mail. Vui lòng thử lại sau."];
         }
     }
 }

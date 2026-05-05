@@ -273,5 +273,41 @@ class AnalyticsDAL
         $current = (int) date('Y');
         return [$current, $current - 1, $current - 2];
     }
+
+    // ==========================================
+    // DỮ LIỆU LỊCH GIAO DỊCH TRONG THÁNG
+    // ==========================================
+    public function getCalendarData(int $user_id, string $month): array
+    {
+        $sql = "
+            SELECT
+                DATE(t.transaction_date) AS date_val,
+                SUM(CASE WHEN c.type = 'income' THEN t.amount ELSE 0 END) AS income,
+                SUM(CASE WHEN c.type = 'expense' THEN t.amount ELSE 0 END) AS expense,
+                IF(SUM(CASE WHEN c.type = 'expense' THEN t.amount ELSE 0 END) > 1000000, 1, 0) AS is_anomaly
+            FROM transactions t
+            INNER JOIN categories c ON t.category_id = c.id
+            WHERE t.user_id = :user_id
+              AND DATE_FORMAT(t.transaction_date, '%Y-%m') = :month
+            GROUP BY DATE(t.transaction_date)
+        ";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':user_id' => $user_id, ':month' => $month]);
+        
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $calendarData = [];
+        
+        // Format lại mảng với Key là Ngày (YYYY-MM-DD) để Frontend vẽ lịch dễ hơn
+        foreach ($results as $row) {
+            $calendarData[$row['date_val']] = [
+                'income'     => (float)$row['income'],
+                'expense'    => (float)$row['expense'],
+                'is_anomaly' => (bool)$row['is_anomaly']
+            ];
+        }
+        
+        return $calendarData;
+    }
 }
 ?>

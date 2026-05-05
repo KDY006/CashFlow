@@ -67,4 +67,13 @@ if ($action === 'delete') {
     echo json_encode($result);
     exit();
 }
+
+if ($action === 'clone_previous') {
+    $month = $_POST['month'] ?? date('n');
+    $year = $_POST['year'] ?? date('Y');
+    
+    $result = $budgetBUS->clonePreviousMonthBudgets($userId, $month, $year);
+    echo json_encode($result);
+    exit();
+}
 ?>

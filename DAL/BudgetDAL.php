@@ -110,5 +110,37 @@ class BudgetDAL {
         $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
         return $stmt->execute();
     }
+
+    // ==========================================
+    // SAO CHÉP NGÂN SÁCH TỪ THÁNG TRƯỚC
+    // ==========================================
+    public function clonePreviousMonthBudgets($userId, $prevMonth, $prevYear, $newMonth, $newYear) {
+        try {
+            // 1. Kiểm tra xem tháng cũ có hũ nào không
+            $checkSql = "SELECT COUNT(*) FROM budgets WHERE user_id = :user_id AND month = :prev_month AND year = :prev_year";
+            $checkStmt = $this->db->prepare($checkSql);
+            $checkStmt->execute([':user_id' => $userId, ':prev_month' => $prevMonth, ':prev_year' => $prevYear]);
+            if ($checkStmt->fetchColumn() == 0) return 0; // Trả về 0 nếu không có gì để copy
+
+            // 2. Thực hiện copy (Chỉ copy giới hạn chi, tiến độ tự động = 0)
+            $sql = "INSERT INTO budgets (user_id, category_id, amount_limit, month, year) 
+                    SELECT user_id, category_id, amount_limit, :new_month, :new_year 
+                    FROM budgets 
+                    WHERE user_id = :user_id AND month = :prev_month AND year = :prev_year";
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                ':new_month' => $newMonth,
+                ':new_year'  => $newYear,
+                ':user_id'   => $userId,
+                ':prev_month'=> $prevMonth,
+                ':prev_year' => $prevYear
+            ]);
+            
+            return $stmt->rowCount(); // Trả về số lượng hũ vừa được copy
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
 }
 ?>

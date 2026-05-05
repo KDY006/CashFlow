@@ -3,7 +3,7 @@
 class FormatHelper {
     
     public static function formatCurrency($amount): string {
-        return number_format((float) $amount, 0, ',', '.') . ' đ';
+        return number_format((float) $amount, 0, ',', '.');
     }
 
     public static function formatDate($dateString) {

@@ -50,3 +50,5 @@
         </div>
     </div>
 </nav>
+
+<?php require_once __DIR__ . '/global-add-modal.php'; ?>

@@ -124,8 +124,15 @@
 
         if (result.status) {
             if (globalTransModal) globalTransModal.hide();
+            
+            // Trang Giao dịch
             if (typeof fetchTransactions === 'function') fetchTransactions();
+            
+            // Trang Ngân sách
             if (typeof fetchBudgets === 'function') fetchBudgets();
+            
+            // THÊM DÒNG NÀY: Dành riêng cho trang Tổng quan (Dashboard)
+            if (typeof loadDashboardData === 'function') loadDashboardData();
         }
     });
 </script>

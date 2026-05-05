@@ -167,7 +167,15 @@ $userId = $_SESSION['user_id'];
             const list = document.getElementById('budgetList');
             
             if (result.data.length === 0) {
-                list.innerHTML = `<div class="col-12 text-center py-5 text-muted"><i class="bi bi-safe2 fs-1 mb-2"></i><p>Tháng này bạn chưa thiết lập hũ ngân sách nào.</p></div>`; return;
+                list.innerHTML = `
+                <div class="col-12 text-center py-5 text-muted">
+                    <i class="bi bi-safe2 fs-1 mb-2"></i>
+                    <p>Tháng này bạn chưa thiết lập hũ ngân sách nào.</p>
+                    <button class="btn btn-outline-success rounded-pill mt-3 fw-bold shadow-sm" onclick="clonePreviousBudgets()">
+                        <i class="bi bi-copy me-2"></i>Thừa kế ngân sách tháng trước
+                    </button>
+                </div>`; 
+                return;
             }
             
             let html = '';
@@ -264,6 +272,30 @@ $userId = $_SESSION['user_id'];
                 const result = await res.json();
                 showToast(result.message, result.status);
                 if(result.status) fetchBudgets();
+            }
+        }
+
+        async function clonePreviousBudgets() {
+            const pickerVal = document.getElementById('monthPicker').value;
+            const [year, month] = pickerVal.split('-');
+
+            const fd = new FormData(); 
+            fd.append('action', 'clone_previous'); 
+            fd.append('month', parseInt(month));
+            fd.append('year', parseInt(year));
+
+            try {
+                const res = await fetch('../../controllers/BudgetController.php', { method: 'POST', body: fd });
+                const result = await res.json();
+                
+                showToast(result.message, result.status);
+                
+                // Nếu sao chép thành công, load lại danh sách ngay lập tức
+                if (result.status) {
+                    fetchBudgets();
+                }
+            } catch (error) {
+                showToast('Lỗi kết nối máy chủ!', false);
             }
         }
 

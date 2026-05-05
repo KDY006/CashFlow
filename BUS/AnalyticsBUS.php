@@ -20,6 +20,13 @@ class AnalyticsBUS
         if (empty($month)) $month = date('Y-m'); 
         $prev_month = date('Y-m', strtotime($month . '-01 -1 month'));
 
+        // 1. Kéo dữ liệu Lịch từ AnalyticsDAL vừa viết
+        $analyticsDal = new AnalyticsDAL();
+        $calendar_data = $analyticsDal->getCalendarData($user_id, $month);
+        
+        // 2. Kéo dữ liệu Sức khỏe hũ từ hàm helper vừa viết
+        $budget_health = $this->getBudgetHealth($user_id, $month);
+
         return [
             'stats'          => $this->getCurrentMonthStats($user_id, $month),
             'pie_chart'      => $this->getPieChartData($user_id, $month),
@@ -27,6 +34,8 @@ class AnalyticsBUS
             'top_categories' => $this->getTopCategories($user_id, $month),
             'mom_comparison' => $this->getMoMComparison($user_id, $month, $prev_month),
             'alerts'         => $this->generateAlerts($user_id, $month),
+            'calendar_data' => $calendar_data,
+            'budget_health' => $budget_health
         ];
     }
 
@@ -212,6 +221,34 @@ class AnalyticsBUS
             'transactions' => $transactions, 'summary' => $summary,
             'pagination'   => ['current_page' => $page, 'total_pages' => max(1, $total_pages), 'total' => $result['total'], 'per_page' => $per_page]
         ];
+    }
+
+    // ==========================================
+    // LẤY SỨC KHỎE NGÂN SÁCH TỪ BUDGET_DAL
+    // ==========================================
+    private function getBudgetHealth(int $userId, string $monthStr): array
+    {
+        $budgetDal = new BudgetDAL();
+        
+        // Cắt chuỗi '2026-05' thành năm và tháng
+        $parts = explode('-', $monthStr);
+        $year = (int)$parts[0];
+        $month = (int)$parts[1];
+        
+        // Gọi hàm đã có sẵn bên BudgetDAL
+        $budgets = $budgetDal->getBudgetsByMonth($userId, $month, $year);
+        $healthData = [];
+        
+        foreach ($budgets as $b) {
+            $healthData[] = [
+                'category_name'       => $b->getCategoryName(),
+                'amount_limit'        => $b->getAmountLimit(),
+                'total_spent'         => $b->getTotalSpent(),
+                'progress_percentage' => $b->getProgressPercentage()
+            ];
+        }
+        
+        return $healthData;
     }
 }
 ?>

@@ -41,5 +41,28 @@ class BudgetBUS {
         if ($result) return ["status" => true, "message" => "Đã xóa hũ ngân sách."];
         return ["status" => false, "message" => "Không thể xóa ngân sách này."];
     }
+
+    public function clonePreviousMonthBudgets($userId, $currentMonth, $currentYear) {
+        // Tính toán tháng và năm liền trước
+        $prevMonth = $currentMonth - 1;
+        $prevYear = $currentYear;
+        
+        if ($prevMonth == 0) {
+            $prevMonth = 12;
+            $prevYear -= 1;
+        }
+
+        // Gọi DAL để thực hiện
+        $clonedCount = $this->budgetDAL->clonePreviousMonthBudgets($userId, $prevMonth, $prevYear, $currentMonth, $currentYear);
+
+        if ($clonedCount === false) {
+            return ["status" => false, "message" => "Đã xảy ra lỗi hệ thống khi sao chép."];
+        }
+        if ($clonedCount === 0) {
+            return ["status" => false, "message" => "Tháng trước không có chiếc hũ nào để thừa kế!"];
+        }
+
+        return ["status" => true, "message" => "Đã thừa kế thành công {$clonedCount} hũ ngân sách!"];
+    }
 }
 ?>

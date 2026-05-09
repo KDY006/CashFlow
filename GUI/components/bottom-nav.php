@@ -1,4 +1,3 @@
-<!-- Tệp: GUI/components/bottom-nav.php -->
 <nav class="bottom-nav">
     <a href="../analytics/dashboard.php" class="bottom-nav-item <?= strpos($_SERVER['REQUEST_URI'], 'dashboard') ? 'active' : '' ?>">
         <i class="bi bi-house-door-fill"></i>
@@ -10,13 +9,17 @@
         <span>Giao dịch</span>
     </a>
 
-    <!-- FAB Nổi (Chỉ hiện trên Mobile) -->
     <div class="fab-container">
         <a href="javascript:void(0)" onclick="openGlobalAddModal()" class="fab-button shadow">
             <i class="bi bi-plus-lg text-white"></i>
         </a>
     </div>
     
+    <a href="../calendar/index.php" class="bottom-nav-item <?= strpos($_SERVER['REQUEST_URI'], 'calendar') ? 'active' : '' ?>">
+        <i class="bi bi-calendar3"></i>
+        <span>Lịch</span>
+    </a>
+
     <a href="../budgets/index.php" class="bottom-nav-item <?= strpos($_SERVER['REQUEST_URI'], 'budgets') ? 'active' : '' ?>">
         <i class="bi bi-bullseye"></i>
         <span>Ngân sách</span>
@@ -30,5 +33,4 @@
 
 <?php require_once __DIR__ . '/global-add-modal.php'; ?>
 
-<!-- THÊM DÒNG NÀY ĐỂ KẾT NỐI VỚI APP.JS -->
 <script src="../../assets/js/app.js?v=<?= time() ?>"></script>

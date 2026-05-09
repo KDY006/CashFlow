@@ -17,6 +17,13 @@
                     <i class="bi bi-cash-stack fs-5"></i> <span class="d-none d-lg-inline">Giao dịch</span>
                 </a>
             </li>
+            
+            <li class="nav-item">
+                <a class="nav-link <?= strpos($_SERVER['REQUEST_URI'], 'calendar') ? 'active' : '' ?>" href="../calendar/index.php" title="Lịch">
+                    <i class="bi bi-calendar3 fs-5"></i> <span class="d-none d-lg-inline">Lịch</span>
+                </a>
+            </li>
+
             <li class="nav-item">
                 <a class="nav-link <?= strpos($_SERVER['REQUEST_URI'], 'budgets') ? 'active' : '' ?>" href="../budgets/index.php" title="Ngân sách">
                     <i class="bi bi-bullseye fs-5"></i> <span class="d-none d-lg-inline">Ngân sách</span>
@@ -30,7 +37,6 @@
         </ul>
 
         <div class="d-flex align-items-center gap-3">
-            <!-- Nút Thêm Toàn cục cho Desktop & Tablet -->
             <a href="javascript:void(0)" onclick="openGlobalAddModal()" class="btn btn-success rounded-pill px-3 shadow-sm d-none d-md-flex align-items-center fw-bold">
                 <i class="bi bi-plus-lg"></i> <span class="d-none d-lg-inline ms-1">Thêm giao dịch</span>
             </a>

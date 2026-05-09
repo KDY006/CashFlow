@@ -309,5 +309,28 @@ class AnalyticsDAL
         
         return $calendarData;
     }
+
+    // Lấy danh sách giao dịch chi tiết của một ngày
+    public function getDailyTransactions(int $user_id, string $date): array
+    {
+        $sql = "
+            SELECT
+                t.id,
+                t.amount,
+                t.note,
+                DATE_FORMAT(t.created_at, '%d/%m/%Y %H:%i') AS time_val,
+                c.name AS category_name,
+                c.type AS category_type
+            FROM transactions t
+            INNER JOIN categories c ON t.category_id = c.id
+            WHERE t.user_id = :user_id
+              AND DATE(t.transaction_date) = :date_val
+            ORDER BY t.transaction_date DESC, t.id DESC
+        ";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':user_id' => $user_id, ':date_val' => $date]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
 ?>

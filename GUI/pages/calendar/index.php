@@ -66,7 +66,9 @@ require_once __DIR__ . '/../../../autoload.php';
         </div>
     </main>
 
-    <?php require_once __DIR__ . '/../../components/bottom-nav.php'; ?>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script src="../../assets/js/app.js?v=<?= time() ?>"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
@@ -87,14 +89,17 @@ require_once __DIR__ . '/../../../autoload.php';
                 const monthVal = document.getElementById('monthPicker').value; 
                 const [year, month] = monthVal.split('-');
                 
-                // Tạm thời dùng lại API của Dashboard để lấy data lịch cho nhanh
-                const res = await fetch(`../../controllers/AnalyticsController.php?action=get_dashboard&month=${monthVal}`);
+                // Gọi API chuyên dụng thay vì gọi toàn bộ Dashboard
+                const res = await fetch(`../../controllers/AnalyticsController.php?action=get_calendar&month=${monthVal}`);
                 const response = await res.json();
                 
                 if (response.status) {
-                    renderCalendar(parseInt(year), parseInt(month), response.data.calendar_data || {});
+                    // Dữ liệu trả về giờ là mảng phẳng calendar_data
+                    renderCalendar(parseInt(year), parseInt(month), response.data || {});
                 }
-            } catch (error) { console.error(error); }
+            } catch (error) { 
+                console.error("Lỗi tải lịch:", error); 
+            }
         }
 
         function renderCalendar(year, month, calendarData) {
@@ -129,11 +134,65 @@ require_once __DIR__ . '/../../../autoload.php';
             document.getElementById('calendarContainer').innerHTML = html;
         }
 
-        function showDaily(day, month) {
-            document.getElementById('dailyTransactionsCard').style.display = 'block';
-            document.getElementById('selectedDateTitle').innerText = `Giao dịch ngày ${day}/${month}`;
-            // Cuộn mượt mà xuống khu vực chi tiết
-            document.getElementById('dailyTransactionsCard').scrollIntoView({ behavior: 'smooth' });
+        async function showDaily(day, month) {
+            // Hiện panel và cuộn mượt xuống
+            const card = document.getElementById('dailyTransactionsCard');
+            card.style.display = 'block';
+            document.getElementById('selectedDateTitle').innerText = `Giao dịch ngày ${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}`;
+            card.scrollIntoView({ behavior: 'smooth' });
+
+            const listContainer = document.getElementById('dailyTransactionsList');
+            listContainer.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary spinner-border-sm me-2"></div>Đang tải dữ liệu...</div>';
+
+            // Ghép chuỗi YYYY-MM-DD để gửi lên API
+            const pickerValue = document.getElementById('monthPicker').value; 
+            const [year] = pickerValue.split('-');
+            const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+            try {
+                const res = await fetch(`../../controllers/AnalyticsController.php?action=get_daily_transactions&date=${dateStr}`);
+                const response = await res.json();
+
+                if (response.status && response.data.length > 0) {
+                    let html = '';
+                    response.data.forEach(t => {
+                        const isIncome = t.category_type === 'income';
+                        const sign = isIncome ? '+' : '-';
+                        const colorClass = isIncome ? 'text-success' : 'text-danger';
+                        const icon = isIncome ? 'bi-arrow-down-circle-fill' : 'bi-arrow-up-circle-fill';
+                        const noteText = t.note ? t.note : '<span class="opacity-50">Không có ghi chú</span>';
+                        
+                        // Gọi hàm lấy màu ngẫu nhiên từ app.js của bạn
+                        const iconColor = typeof getCategoryColor === 'function' ? getCategoryColor(t.category_name) : '#6c757d';
+
+                        html += `
+                        <div class="d-flex justify-content-between align-items-center mb-3 p-3 border rounded-4 bg-white shadow-sm transition-hover">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 45px; height: 45px; background-color: ${iconColor}">
+                                    <i class="bi ${icon} fs-5"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark fs-6">${t.category_name}</div>
+                                    <div class="small text-muted">${noteText} • <i class="bi bi-clock"></i> ${t.time_val || '00:00'}</div>
+                                </div>
+                            </div>
+                            <div class="fw-bold fs-5 ${colorClass}">
+                                ${sign}${formatMoney(t.amount)} đ
+                            </div>
+                        </div>`;
+                    });
+                    listContainer.innerHTML = html;
+                } else {
+                    listContainer.innerHTML = `
+                        <div class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-1 d-block mb-3 text-secondary opacity-25"></i>
+                            <div class="fst-italic">Không có giao dịch nào phát sinh trong ngày này.</div>
+                        </div>`;
+                }
+            } catch (error) {
+                console.error(error);
+                listContainer.innerHTML = '<div class="text-danger text-center py-3"><i class="bi bi-x-circle me-2"></i>Lỗi tải dữ liệu.</div>';
+            }
         }
 
         document.addEventListener('DOMContentLoaded', () => {

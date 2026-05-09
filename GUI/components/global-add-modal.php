@@ -27,8 +27,8 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-semibold text-muted small">NGÀY</label>
-                        <input type="date" name="transaction_date" id="globalTransactionDate" class="form-control form-control-lg" required max="<?= date('Y-m-d') ?>">
+                        <label class="form-label fw-semibold text-muted small">THỜI GIAN</label>
+                        <input type="datetime-local" name="transaction_date" id="globalTransactionDate" class="form-control form-control-lg" required>
                     </div>
 
                     <div class="mb-4">
@@ -94,7 +94,10 @@
         }
 
         document.getElementById('globalTransactionForm').reset();
-        document.getElementById('globalTransactionDate').valueAsDate = new Date();
+
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('globalTransactionDate').value = now.toISOString().slice(0, 16);
         gAmountWords.innerText = '';
         gHiddenAmount.value = '';
 

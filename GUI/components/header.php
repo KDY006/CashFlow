@@ -1,39 +1,30 @@
+<?php
+// 1. CẤU HÌNH MENU DÙNG CHUNG CHO CẢ DESKTOP VÀ MOBILE
+$menuItems = [
+    ['url' => '../analytics/dashboard.php', 'icon' => 'bi-house-door-fill', 'title' => 'Tổng quan', 'keyword' => 'dashboard'],
+    ['url' => '../transactions/index.php', 'icon' => 'bi-cash-stack', 'title' => 'Giao dịch', 'keyword' => 'transactions'],
+    ['url' => '../calendar/index.php', 'icon' => 'bi-calendar3', 'title' => 'Lịch', 'keyword' => 'calendar'],
+    ['url' => '../budgets/index.php', 'icon' => 'bi-bullseye', 'title' => 'Ngân sách', 'keyword' => 'budgets'],
+    ['url' => '../ai/advisor.php', 'icon' => 'bi-robot', 'title' => 'Cố vấn AI', 'keyword' => 'ai'],
+];
+$currentUri = $_SERVER['REQUEST_URI'];
+?>
+
 <nav class="navbar navbar-expand-md sticky-top py-2 px-3">
     <div class="container-fluid align-items-center">
         
         <a class="navbar-brand text-success fw-bold d-flex align-items-center gap-2" href="../analytics/dashboard.php">
-            <i class="bi bi-wallet2 fs-3"></i>
-            <span>CashFlow</span>
+            <i class="bi bi-wallet2 fs-3"></i><span>CashFlow</span>
         </a>
 
         <ul class="navbar-nav mx-auto desktop-nav d-flex flex-row">
-            <li class="nav-item">
-                <a class="nav-link <?= strpos($_SERVER['REQUEST_URI'], 'dashboard') ? 'active' : '' ?>" href="../analytics/dashboard.php" title="Tổng quan">
-                    <i class="bi bi-house-door-fill fs-5"></i> <span class="d-none d-lg-inline">Tổng quan</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link <?= strpos($_SERVER['REQUEST_URI'], 'transactions') ? 'active' : '' ?>" href="../transactions/index.php" title="Giao dịch">
-                    <i class="bi bi-cash-stack fs-5"></i> <span class="d-none d-lg-inline">Giao dịch</span>
-                </a>
-            </li>
-            
-            <li class="nav-item">
-                <a class="nav-link <?= strpos($_SERVER['REQUEST_URI'], 'calendar') ? 'active' : '' ?>" href="../calendar/index.php" title="Lịch">
-                    <i class="bi bi-calendar3 fs-5"></i> <span class="d-none d-lg-inline">Lịch</span>
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link <?= strpos($_SERVER['REQUEST_URI'], 'budgets') ? 'active' : '' ?>" href="../budgets/index.php" title="Ngân sách">
-                    <i class="bi bi-bullseye fs-5"></i> <span class="d-none d-lg-inline">Ngân sách</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link <?= strpos($_SERVER['REQUEST_URI'], 'ai') ? 'active' : '' ?>" href="../ai/advisor.php" title="Cố vấn AI">
-                    <i class="bi bi-robot fs-5"></i> <span class="d-none d-lg-inline">Cố vấn AI</span>
-                </a>
-            </li>
+            <?php foreach ($menuItems as $item): ?>
+                <li class="nav-item">
+                    <a class="nav-link <?= strpos($currentUri, $item['keyword']) !== false ? 'active' : '' ?>" href="<?= $item['url'] ?>" title="<?= $item['title'] ?>">
+                        <i class="bi <?= $item['icon'] ?> fs-5"></i> <span class="d-none d-lg-inline"><?= $item['title'] ?></span>
+                    </a>
+                </li>
+            <?php endforeach; ?>
         </ul>
 
         <div class="d-flex align-items-center gap-3">
@@ -55,6 +46,25 @@
             </div>
         </div>
     </div>
+</nav>
+
+<nav class="bottom-nav d-md-none">
+    <?php foreach ($menuItems as $index => $item): ?>
+        
+        <?php if ($index == 2): ?>
+            <div class="fab-container">
+                <a href="javascript:void(0)" onclick="openGlobalAddModal()" class="fab-button shadow">
+                    <i class="bi bi-plus-lg text-white"></i>
+                </a>
+            </div>
+        <?php endif; ?>
+
+        <a href="<?= $item['url'] ?>" class="bottom-nav-item <?= strpos($currentUri, $item['keyword']) !== false ? 'active' : '' ?>">
+            <i class="bi <?= $item['icon'] ?>"></i>
+            <span><?= $item['title'] ?></span>
+        </a>
+        
+    <?php endforeach; ?>
 </nav>
 
 <?php require_once __DIR__ . '/global-add-modal.php'; ?>

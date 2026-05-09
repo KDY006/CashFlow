@@ -28,5 +28,33 @@ if ($action === 'get_dashboard') {
     exit();
 }
 
+// Thêm action mới vào cấu trúc if/else hiện tại
+if ($action === 'get_dashboard') {
+    $month = $_GET['month'] ?? date('Y-m');
+    $result = $analyticsBUS->getDashboardData($userId, $month);
+    echo json_encode(['status' => true, 'data' => $result]);
+    exit();
+} 
+// LÀN ĐƯỜNG ƯU TIÊN MỚI
+elseif ($action === 'get_calendar') {
+    $month = $_GET['month'] ?? date('Y-m');
+    $result = $analyticsBUS->getCalendarOnly($userId, $month);
+    echo json_encode(['status' => true, 'data' => $result]);
+    exit();
+}
+elseif ($action === 'get_calendar') {
+    $month = $_GET['month'] ?? date('Y-m');
+    $result = $analyticsBUS->getCalendarOnly($userId, $month);
+    echo json_encode(['status' => true, 'data' => $result]);
+    exit();
+}
+// THÊM NHÁNH MỚI NÀY VÀO ĐÂY:
+elseif ($action === 'get_daily_transactions') {
+    $date = $_GET['date'] ?? date('Y-m-d');
+    $result = $analyticsBUS->getDailyTransactions($userId, $date);
+    echo json_encode(['status' => true, 'data' => $result]);
+    exit();
+}
+
 echo json_encode(["status" => false, "message" => "Yêu cầu không hợp lệ."]);
 ?>

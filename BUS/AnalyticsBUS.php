@@ -250,5 +250,18 @@ class AnalyticsBUS
         
         return $healthData;
     }
+
+    public function getCalendarOnly(int $user_id, string $month): array
+    {
+        // Khởi tạo trực tiếp DAL để tránh lỗi null property
+        $analyticsDal = new AnalyticsDAL();
+        return $analyticsDal->getCalendarData($user_id, $month);
+    }
+
+    public function getDailyTransactions(int $user_id, string $date): array
+    {
+        $analyticsDal = new AnalyticsDAL();
+        return $analyticsDal->getDailyTransactions($user_id, $date);
+    }
 }
 ?>

@@ -43,9 +43,27 @@ require_once __DIR__ . '/../../../autoload.php';
     <main class="container py-4 mb-5">
         <?php require_once __DIR__ . '/../../components/alert.php'; ?>
 
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <!-- THANH ĐIỀU HƯỚNG THÁNG MỚI -->
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
             <h3 class="fw-bold text-dark mb-0">Tổng quan</h3>
-            <input type="month" id="monthPicker" class="form-control fw-bold border-0 bg-white shadow-sm text-primary" style="width: 160px; cursor: pointer;" onchange="loadDashboardData()">
+            
+            <!-- Bộ điều hướng tháng (Custom Month Picker) -->
+            <div class="d-flex align-items-center bg-white rounded-pill shadow-sm p-1 border">
+                <button class="btn btn-light rounded-circle btn-sm d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;" onclick="changeMonth(-1)">
+                    <i class="bi bi-chevron-left fw-bold"></i>
+                </button>
+                
+                <div class="mx-3 text-center" style="min-width: 120px;">
+                    <span id="currentMonthDisplay" class="fw-bold text-primary fs-6">Tháng 05, 2026</span>
+                </div>
+
+                <button class="btn btn-light rounded-circle btn-sm d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;" onclick="changeMonth(1)">
+                    <i class="bi bi-chevron-right fw-bold"></i>
+                </button>
+            </div>
+
+            <!-- Ô input cũ được ẩn đi (Giữ lại để JS lấy dữ liệu gửi API) -->
+            <input type="month" id="monthPicker" class="d-none" onchange="loadDashboardData()">
         </div>
 
         <!-- THẺ TÓM TẮT -->
@@ -151,6 +169,34 @@ require_once __DIR__ . '/../../../autoload.php';
         // Hàm format số tiền
         function formatMoney(num) {
             return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+
+        // Hàm xử lý khi bấm mũi tên chuyển tháng
+        function changeMonth(offset) {
+            const picker = document.getElementById('monthPicker');
+            let [year, month] = picker.value.split('-').map(Number);
+
+            // Cộng/trừ tháng
+            month += offset;
+
+            // Xử lý khi lùi qua năm cũ hoặc tiến sang năm mới
+            if (month < 1) {
+                month = 12;
+                year--;
+            } else if (month > 12) {
+                month = 1;
+                year++;
+            }
+
+            // Ép định dạng lại thành YYYY-MM
+            const newMonthStr = `${year}-${String(month).padStart(2, '0')}`;
+            picker.value = newMonthStr;
+
+            // Cập nhật lại Text hiển thị ở giữa 2 mũi tên
+            document.getElementById('currentMonthDisplay').innerText = `Tháng ${String(month).padStart(2, '0')}, ${year}`;
+
+            // Gọi API lấy dữ liệu mới
+            loadDashboardData();
         }
 
         async function loadDashboardData() {
@@ -287,8 +333,16 @@ require_once __DIR__ . '/../../../autoload.php';
 
         document.addEventListener('DOMContentLoaded', () => {
             const today = new Date();
+            const yyyy = today.getFullYear();
             let mm = today.getMonth() + 1;
-            document.getElementById('monthPicker').value = `${today.getFullYear()}-${mm < 10 ? '0'+mm : mm}`;
+            
+            // Format YYYY-MM cho input ẩn
+            const monthVal = `${yyyy}-${mm < 10 ? '0'+mm : mm}`;
+            document.getElementById('monthPicker').value = monthVal;
+            
+            // Format hiển thị cho Text ở giữa
+            document.getElementById('currentMonthDisplay').innerText = `Tháng ${mm < 10 ? '0'+mm : mm}, ${yyyy}`;
+
             loadDashboardData();
         });
     </script>

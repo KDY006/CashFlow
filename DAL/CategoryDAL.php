@@ -8,46 +8,59 @@ class CategoryDAL {
         $this->db = Database::getInstance();
     }
 
-    public function getAllCategories($userId) {
-        $sql = "SELECT * FROM categories WHERE user_id = :user_id ORDER BY name ASC";
+    // LẤY DANH MỤC THEO CẤU TRÚC CÂY (CHA - CON)
+    public function getCategoryTree($userId) {
+        // Ưu tiên hiển thị: Thu nhập trước, Chi tiêu sau. Sau đó sắp xếp theo cha con.
+        $sql = "SELECT * FROM categories WHERE user_id = :user_id ORDER BY type DESC, parent_id ASC, name ASC";
         $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt->execute([':user_id' => $userId]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $tree = [];
+        $lookup = [];
+
+        // Khởi tạo mảng con trống cho tất cả các danh mục
+        foreach ($rows as $row) {
+            $row['children'] = [];
+            $lookup[$row['id']] = $row;
+        }
+
+        // Bắt đầu nhúng các danh mục con vào danh mục cha tương ứng
+        foreach ($lookup as $id => &$item) {
+            if ($item['parent_id'] === null) {
+                // Nếu không có cha => Là danh mục gốc (Level 1)
+                $tree[] = &$item;
+            } else {
+                // Nếu có cha => Nhét nó vào mảng children của thằng cha
+                if (isset($lookup[$item['parent_id']])) {
+                    $lookup[$item['parent_id']]['children'][] = &$item;
+                }
+            }
+        }
+        return $tree;
     }
 
-    public function getCategoriesByType($userId, $type) {
-        $sql = "SELECT * FROM categories WHERE user_id = :user_id AND type = :type ORDER BY name ASC";
+    // THÊM DANH MỤC (Hỗ trợ parent_id)
+    public function addCategory($userId, $name, $type, $parentId = null) {
+        $sql = "INSERT INTO categories (user_id, name, type, parent_id) VALUES (:user_id, :name, :type, :parent_id)";
         $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
-        $stmt->bindParam(':type', $type, PDO::PARAM_STR);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt->execute([
+            ':user_id' => $userId,
+            ':name' => $name,
+            ':type' => $type,
+            ':parent_id' => $parentId
+        ]);
     }
 
-    public function getCategoryById($id, $userId) {
-        $sql = "SELECT * FROM categories WHERE id = :id AND user_id = :user_id LIMIT 1";
+    // CÁC HÀM CŨ GIỮ NGUYÊN
+    public function deleteCategory($id, $userId) {
+        $sql = "DELETE FROM categories WHERE id = :id AND user_id = :user_id";
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
         $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
-        $stmt->execute();
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
-
-    // =====================================
-    // CÁC HÀM MỚI BỔ SUNG CHO CHỨC NĂNG QUẢN LÝ
-    // =====================================
-
-    public function addCategory($userId, $name, $type) {
-        $sql = "INSERT INTO categories (user_id, name, type) VALUES (:user_id, :name, :type)";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
-        $stmt->bindParam(':name', $name, PDO::PARAM_STR);
-        $stmt->bindParam(':type', $type, PDO::PARAM_STR);
         return $stmt->execute();
     }
 
-    // Kiểm tra xem danh mục đang được sử dụng trong giao dịch nào không
     public function isCategoryUsed($id, $userId) {
         $sql = "SELECT COUNT(*) FROM transactions WHERE category_id = :id AND user_id = :user_id";
         $stmt = $this->db->prepare($sql);
@@ -55,14 +68,6 @@ class CategoryDAL {
         $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchColumn() > 0;
-    }
-
-    public function deleteCategory($id, $userId) {
-        $sql = "DELETE FROM categories WHERE id = :id AND user_id = :user_id";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-        $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
-        return $stmt->execute();
     }
 }
 ?>

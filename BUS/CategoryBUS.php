@@ -8,28 +8,39 @@ class CategoryBUS {
         $this->categoryDAL = new CategoryDAL();
     }
 
-    public function getAllCategories($userId) {
-        return $this->categoryDAL->getAllCategories($userId);
+    public function getCategoryTree($userId) {
+        return $this->categoryDAL->getCategoryTree($userId);
     }
 
-    public function addCategory($userId, $name, $type) {
-        if (empty(trim($name))) return ["status" => false, "message" => "Tên danh mục không được để trống."];
-        if (!in_array($type, ['income', 'expense'])) return ["status" => false, "message" => "Loại danh mục không hợp lệ."];
+    public function addCategory($userId, $name, $type, $parentId = null) {
+        $name = trim($name);
+        if (empty($name)) {
+            return ['status' => false, 'message' => 'Tên danh mục không được để trống.'];
+        }
 
-        $result = $this->categoryDAL->addCategory($userId, trim($name), $type);
-        if ($result) return ["status" => true, "message" => "Đã thêm danh mục mới!"];
-        return ["status" => false, "message" => "Lỗi khi thêm danh mục."];
+        // Quy tắc: Nếu là Chi tiêu (expense) thì bắt buộc phải chọn nhóm cha
+        if ($type === 'expense' && empty($parentId)) {
+            return ['status' => false, 'message' => 'Danh mục chi tiêu bắt buộc phải thuộc một nhóm cha.'];
+        }
+
+        // Nếu là Thu nhập (income) thì ép parentId về null (không có cha)
+        if ($type === 'income') {
+            $parentId = null;
+        }
+
+        $result = $this->categoryDAL->addCategory($userId, $name, $type, $parentId);
+        if ($result) {
+            return ['status' => true, 'message' => 'Thêm danh mục thành công!'];
+        }
+        return ['status' => false, 'message' => 'Có lỗi xảy ra, vui lòng thử lại.'];
     }
 
     public function deleteCategory($id, $userId) {
-        // Kiểm tra xem danh mục có đang chứa dòng tiền nào không
         if ($this->categoryDAL->isCategoryUsed($id, $userId)) {
-            return ["status" => false, "message" => "Không thể xóa! Danh mục này đang chứa các giao dịch lịch sử."];
+            return ['status' => false, 'message' => 'Danh mục này đã có giao dịch, không thể xóa!'];
         }
-
         $result = $this->categoryDAL->deleteCategory($id, $userId);
-        if ($result) return ["status" => true, "message" => "Đã xóa danh mục."];
-        return ["status" => false, "message" => "Lỗi khi xóa danh mục."];
+        return ['status' => $result, 'message' => $result ? 'Đã xóa danh mục.' : 'Lỗi xóa danh mục.'];
     }
 }
 ?>

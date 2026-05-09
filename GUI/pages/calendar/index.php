@@ -1,5 +1,4 @@
 <?php
-// Tệp: GUI/pages/calendar/index.php
 require_once __DIR__ . '/../../../middleware/AuthMiddleware.php';
 require_once __DIR__ . '/../../../autoload.php';
 ?>
@@ -8,198 +7,307 @@ require_once __DIR__ . '/../../../autoload.php';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lịch giao dịch - CashFlow</title>
+    <title>Lịch tài chính - CashFlow</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="../../assets/css/style.css">
     <style>
-        /* CSS CHUYÊN BIỆT CHO LỊCH */
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 15px;}
-        .calendar-header { text-align: center; font-weight: bold; font-size: 0.85rem; padding: 5px; color: #6c757d; }
-        .calendar-cell { border: 1px solid #f0f2f5; border-radius: 8px; min-height: 85px; padding: 5px; background: #fff; transition: transform 0.2s; cursor: pointer;}
-        .calendar-cell:hover { border-color: #0d6efd; box-shadow: 0 4px 10px rgba(0,0,0,0.05); z-index: 1; transform: scale(1.05);}
-        .calendar-cell.empty { background: transparent; border: none; cursor: default; box-shadow: none;}
-        .calendar-cell.empty:hover { transform: none; }
-        .date-num { font-weight: 800; color: #343a40; font-size: 0.9rem; margin-bottom: 2px; }
-        .date-today { background-color: #0d6efd; color: white; border-radius: 50%; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; }
-        .cal-money { font-size: 0.75rem; font-weight: 600; line-height: 1.2; text-align: right; margin-top: 2px;}
-        .anomaly-icon { position: absolute; top: 4px; right: 4px; font-size: 0.8rem; color: #dc3545; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
-        @media (max-width: 768px) {
-            .calendar-grid { gap: 4px; }
-            .calendar-cell { min-height: 65px; padding: 2px; }
-            .cal-money { font-size: 0.65rem; }
+        /* CSS ĐỒNG BỘ MÀU SẮC */
+        .cf-tab-btn { border: 2px solid transparent; border-radius: 15px; padding: 12px; background-color: #fff; transition: all 0.2s; text-align: left;}
+        .cf-tab-btn.income-box { border-color: #198754; background-color: #d1e7dd; }
+        .cf-tab-btn.expense-box { border-color: #dc3545; background-color: #f8d7da; }
+        .cf-tab-btn.net-box { border-color: #0d6efd; background-color: #e7f1ff; }
+
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+        .calendar-cell { 
+            border: 1px solid #dee2e6; border-radius: 12px; min-height: 100px; padding: 8px; 
+            background: #fff; cursor: pointer; transition: 0.2s; position: relative;
         }
+        .calendar-cell:hover { border-color: #0d6efd; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .calendar-cell.active { border: 2px solid #0d6efd; background-color: #f0f7ff; }
+        .calendar-cell.empty { background: #f8f9fa; border: none; opacity: 0.4; cursor: default; }
+        
+        .date-num { font-weight: 800; font-size: 1.1rem; color: #343a40; }
+        .today .date-num { color: #0d6efd; text-decoration: underline; }
+        
+        /* Icon tờ giấy note */
+        .note-indicator { position: absolute; top: 8px; right: 8px; color: #ffc107; font-size: 1.1rem; }
+        
+        .badge-money { font-size: 0.75rem; font-weight: bold; display: block; text-align: right; margin-top: 2px;}
+        .badge-income { color: #198754; }
+        .badge-expense { color: #dc3545; }
+
+        .note-card { background: #fff9db; border-left: 5px solid #fab005; border-radius: 8px; }
     </style>
 </head>
 <body class="bg-light">
-
     <?php require_once __DIR__ . '/../../components/header.php'; ?>
 
     <main class="container py-4 mb-5">
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
-            <h3 class="fw-bold text-dark mb-0">Lịch giao dịch</h3>
-            <div class="d-flex align-items-center bg-white rounded-pill shadow-sm p-1 border">
-                <button class="btn btn-light rounded-circle btn-sm d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;" onclick="changeMonth(-1)"><i class="bi bi-chevron-left fw-bold"></i></button>
-                <div class="mx-3 text-center" style="min-width: 120px;"><span id="currentMonthDisplay" class="fw-bold text-primary fs-6">...</span></div>
-                <button class="btn btn-light rounded-circle btn-sm d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;" onclick="changeMonth(1)"><i class="bi bi-chevron-right fw-bold"></i></button>
-            </div>
-            <input type="month" id="monthPicker" class="d-none" onchange="loadCalendarData()">
-        </div>
-
-        <div class="card shadow-sm border-0 rounded-4 mb-4">
-            <div class="card-body p-3 p-md-4">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <small class="text-muted"><i class="bi bi-lightning-fill text-danger"></i> Chi tiêu cao bất thường</small>
-                </div>
-                <div id="calendarContainer">
-                    <div class="text-center py-4 text-muted"><div class="spinner-border text-primary spinner-border-sm me-2"></div>Đang vẽ lịch...</div>
+        <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1055">
+            <div id="liveToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body fw-semibold" id="toastMessage">Thông báo!</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
                 </div>
             </div>
         </div>
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+            <h3 class="fw-bold text-dark mb-0"><i class="bi bi-calendar3 me-2 text-primary"></i>Lịch Tài Chính</h3>
+            <div class="d-flex align-items-center bg-white p-1 rounded-pill shadow-sm border">
+                <button class="btn btn-sm btn-light rounded-circle" onclick="changeMonth(-1)"><i class="bi bi-chevron-left"></i></button>
+                <span id="currentMonthDisplay" class="fw-bold px-3" style="min-width: 130px; text-align:center;">Tháng...</span>
+                <button class="btn btn-sm btn-light rounded-circle" onclick="changeMonth(1)"><i class="bi bi-chevron-right"></i></button>
+                <input type="month" id="monthPicker" class="d-none" onchange="onMonthSelected()">
+            </div>
+        </div>
 
-        <div class="card shadow-sm border-0 rounded-4 bg-white" id="dailyTransactionsCard" style="display: none;">
-            <div class="card-body p-4">
-                <h6 class="fw-bold mb-3" id="selectedDateTitle">Chi tiết ngày...</h6>
-                <div id="dailyTransactionsList" class="text-muted small">Tính năng đang được phát triển...</div>
+        <div class="row g-3 mb-4">
+            <div class="col-4">
+                <div class="cf-tab-btn income-box shadow-sm">
+                    <h6 class="text-success small fw-bold mb-1">THU NHẬP</h6>
+                    <h5 class="fw-bold mb-0" id="monthIncome">0 đ</h5>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="cf-tab-btn expense-box shadow-sm">
+                    <h6 class="text-danger small fw-bold mb-1">CHI TIÊU</h6>
+                    <h5 class="fw-bold mb-0" id="monthExpense">0 đ</h5>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="cf-tab-btn net-box shadow-sm">
+                    <h6 class="text-primary small fw-bold mb-1">CHÊNH LỆCH</h6>
+                    <h5 class="fw-bold mb-0" id="monthNet">0 đ</h5>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-12 col-lg-8">
+                <div class="card shadow-sm border-0 rounded-4 bg-white p-3">
+                    <div class="calendar-grid mb-2">
+                        <div class="text-center fw-bold text-muted small">T2</div><div class="text-center fw-bold text-muted small">T3</div>
+                        <div class="text-center fw-bold text-muted small">T4</div><div class="text-center fw-bold text-muted small">T5</div>
+                        <div class="text-center fw-bold text-muted small">T6</div><div class="text-center fw-bold text-primary small">T7</div>
+                        <div class="text-center fw-bold text-danger small">CN</div>
+                    </div>
+                    <div id="calendarDays" class="calendar-grid"></div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-4">
+                <div class="card shadow-sm border-0 rounded-4 bg-white mb-4 overflow-hidden">
+                    <div class="card-header bg-warning bg-opacity-10 border-0 p-3 d-flex justify-content-between align-items-center">
+                        <h6 class="fw-bold mb-0 text-warning-emphasis"><i class="bi bi-sticky-fill me-2"></i>Ghi chú ngày</h6>
+                        <button class="btn btn-sm btn-warning rounded-pill fw-bold text-white px-3" onclick="openNoteModal()">Lưu/Sửa</button>
+                    </div>
+                    <div class="card-body p-3" id="dailyNoteContent">
+                        <p class="text-muted fst-italic small mb-0">Không có ghi chú cho ngày này.</p>
+                    </div>
+                </div>
+
+                <div id="dailyDetailList"></div>
             </div>
         </div>
     </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+    <div class="modal fade" id="noteModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <form id="noteForm" class="modal-content border-0 shadow rounded-4">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold">Ghi chú cho ngày <span id="noteDateLabel"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <textarea name="content" id="noteTextarea" class="form-control border-0 bg-light" rows="5" placeholder="Nhập nội dung ghi chú... (Để trống để xóa)"></textarea>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold py-2">Cập nhật ghi chú</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="../../assets/js/app.js?v=<?= time() ?>"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
-        function formatMoney(num) { return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "."); }
+        let calendarData = {};
+        let dailyNotes = {}; // Chứa list ghi chú của tháng
+        let currentMonthStr = ''; 
+        let selectedDate = ''; 
+        const noteModal = new bootstrap.Modal(document.getElementById('noteModal'));
+
+        async function loadCalendarData() {
+            currentMonthStr = document.getElementById('monthPicker').value;
+            const [y, m] = currentMonthStr.split('-');
+            document.getElementById('currentMonthDisplay').innerText = `Tháng ${m} / ${y}`;
+
+            // Tải song song Giao dịch và Ghi chú
+            const [resCal, resNotes] = await Promise.all([
+                fetch(`../../controllers/AnalyticsController.php?action=get_calendar&month=${currentMonthStr}`),
+                fetch(`../../controllers/DailyNoteController.php?action=get_all_month&month=${currentMonthStr}`)
+            ]);
+
+            const resultCal = await resCal.json();
+            const resultNotes = await resNotes.json();
+
+            if (resultCal.status) calendarData = resultCal.data;
+            if (resultNotes.status) {
+                dailyNotes = {};
+                resultNotes.data.forEach(n => dailyNotes[n.note_date] = n.content);
+            }
+
+            renderCalendar(parseInt(y), parseInt(m));
+            updateSummary();
+            
+            // Tự động chọn ngày hôm nay nếu mới load
+            const today = new Date().toISOString().split('T')[0];
+            if (!selectedDate || !selectedDate.startsWith(currentMonthStr)) {
+                selectDay(calendarData[today] ? today : `${currentMonthStr}-01`);
+            } else {
+                selectDay(selectedDate);
+            }
+        }
+
+        function renderCalendar(year, month) {
+            const firstDay = new Date(year, month - 1, 1).getDay();
+            const daysInMonth = new Date(year, month, 0).getDate();
+            const startOffset = firstDay === 0 ? 6 : firstDay - 1; 
+            const todayStr = new Date().toISOString().split('T')[0];
+            let html = '';
+
+            for (let i = 0; i < startOffset; i++) html += `<div class="calendar-cell empty"></div>`;
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                const data = calendarData[dateStr] || { income: 0, expense: 0 };
+                const hasNote = dailyNotes[dateStr];
+                
+                html += `
+                <div class="calendar-cell ${dateStr === todayStr ? 'today' : ''} ${dateStr === selectedDate ? 'active' : ''}" 
+                     id="cell_${dateStr}" onclick="selectDay('${dateStr}')">
+                    <span class="date-num">${d}</span>
+                    ${hasNote ? '<i class="bi bi-sticky-fill note-indicator"></i>' : ''}
+                    <div class="mt-auto">
+                        ${data.income > 0 ? `<span class="badge-money badge-income">+${(data.income/1000).toFixed(0)}K</span>` : ''}
+                        ${data.expense > 0 ? `<span class="badge-money badge-expense">-${(data.expense/1000).toFixed(0)}K</span>` : ''}
+                    </div>
+                </div>`;
+            }
+            document.getElementById('calendarDays').innerHTML = html;
+        }
+
+        function selectDay(dateStr) {
+            if(selectedDate) document.getElementById('cell_'+selectedDate)?.classList.remove('active');
+            selectedDate = dateStr;
+            document.getElementById('cell_'+dateStr)?.classList.add('active');
+
+            // Hiển thị Ghi chú
+            const noteArea = document.getElementById('dailyNoteContent');
+            if (dailyNotes[dateStr]) {
+                noteArea.innerHTML = `<div class="p-2 note-card small fw-semibold text-dark">${dailyNotes[dateStr]}</div>`;
+            } else {
+                noteArea.innerHTML = `<p class="text-muted fst-italic small mb-0">Không có ghi chú.</p>`;
+            }
+
+            fetchDailyTransactions(dateStr);
+        }
+
+        async function fetchDailyTransactions(dateStr) {
+            const res = await fetch(`../../controllers/AnalyticsController.php?action=get_daily_transactions&date=${dateStr}`);
+            const result = await res.json();
+            const container = document.getElementById('dailyDetailList');
+            
+            if (result.status && result.data.length > 0) {
+                let html = `<h6 class="fw-bold mb-3 mt-2">Giao dịch ngày ${dateStr.split('-').reverse().join('/')}</h6>`;
+                result.data.forEach(t => {
+                    const isInc = t.category_type === 'income';
+                    const amountStr = window.formatNumberInput(t.amount.split('.')[0]);
+                    const words = window.readVietnameseNumber ? window.readVietnameseNumber(t.amount.split('.')[0]) : '';
+                    
+                    html += `
+                    <div class="card border-0 shadow-sm rounded-4 mb-2 p-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle bg-light p-2 text-primary"><i class="bi bi-tag-fill"></i></div>
+                                <div>
+                                    <div class="fw-bold text-dark">${t.category_name}</div>
+                                    <div class="small text-muted">${t.note || '...'}</div>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold ${isInc ? 'text-success' : 'text-danger'}">${isInc ? '+' : '-'}${amountStr} đ</div>
+                                <div class="text-muted fst-italic" style="font-size:0.65rem">${words}</div>
+                            </div>
+                        </div>
+                    </div>`;
+                });
+                container.innerHTML = html;
+            } else {
+                container.innerHTML = '<div class="text-center py-4 text-muted small">Không có giao dịch ngày này.</div>';
+            }
+        }
+
+        function updateSummary() {
+            let inc = 0, exp = 0;
+            Object.values(calendarData).forEach(d => { inc += d.income; exp += d.expense; });
+            document.getElementById('monthIncome').innerText = window.formatNumberInput(inc.toString()) + ' đ';
+            document.getElementById('monthExpense').innerText = window.formatNumberInput(exp.toString()) + ' đ';
+            const net = inc - exp;
+            document.getElementById('monthNet').innerText = (net >= 0 ? '+' : '-') + window.formatNumberInput(Math.abs(net).toString()) + ' đ';
+        }
+
+        function openNoteModal() {
+            document.getElementById('noteDateLabel').innerText = selectedDate;
+            document.getElementById('noteTextarea').value = dailyNotes[selectedDate] || '';
+            noteModal.show();
+        }
+
+        // Thêm biến khởi tạo Toast ở đầu phần script
+        const toastEl = document.getElementById('liveToast');
+        const toast = new bootstrap.Toast(toastEl);
+        function showToast(message, isSuccess = true) {
+            document.getElementById('toastMessage').innerText = message;
+            toastEl.className = isSuccess ? 'toast align-items-center text-bg-success border-0' : 'toast align-items-center text-bg-danger border-0';
+            toast.show();
+        }
+
+        // Cập nhật sự kiện submit form ghi chú
+        document.getElementById('noteForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const content = document.getElementById('noteTextarea').value;
+            const fd = new FormData();
+            fd.append('action', 'save');
+            fd.append('date', selectedDate);
+            fd.append('content', content);
+
+            try {
+                const res = await fetch('../../controllers/DailyNoteController.php', { method: 'POST', body: fd });
+                const result = await res.json();
+                
+                showToast(result.message, result.status); // Báo lên màn hình
+                
+                if (result.status) {
+                    noteModal.hide();
+                    loadCalendarData(); // Tải lại lịch để hiện/ẩn icon tờ giấy màu vàng
+                }
+            } catch (error) {
+                showToast("Lỗi kết nối máy chủ!", false);
+            }
+        };
 
         function changeMonth(offset) {
-            const picker = document.getElementById('monthPicker');
-            let [year, month] = picker.value.split('-').map(Number);
-            month += offset;
-            if (month < 1) { month = 12; year--; } else if (month > 12) { month = 1; year++; }
-            picker.value = `${year}-${String(month).padStart(2, '0')}`;
-            document.getElementById('currentMonthDisplay').innerText = `Tháng ${String(month).padStart(2, '0')}, ${year}`;
+            const [y, m] = document.getElementById('monthPicker').value.split('-');
+            const d = new Date(y, parseInt(m) - 1 + offset, 1);
+            document.getElementById('monthPicker').value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
             loadCalendarData();
         }
 
-        async function loadCalendarData() {
-            try {
-                const monthVal = document.getElementById('monthPicker').value; 
-                const [year, month] = monthVal.split('-');
-                
-                // Gọi API chuyên dụng thay vì gọi toàn bộ Dashboard
-                const res = await fetch(`../../controllers/AnalyticsController.php?action=get_calendar&month=${monthVal}`);
-                const response = await res.json();
-                
-                if (response.status) {
-                    // Dữ liệu trả về giờ là mảng phẳng calendar_data
-                    renderCalendar(parseInt(year), parseInt(month), response.data || {});
-                }
-            } catch (error) { 
-                console.error("Lỗi tải lịch:", error); 
-            }
-        }
-
-        function renderCalendar(year, month, calendarData) {
-            const daysInMonth = new Date(year, month, 0).getDate();
-            let firstDay = new Date(year, month - 1, 1).getDay(); 
-            let startDayIndex = firstDay === 0 ? 6 : firstDay - 1; 
-            const today = new Date();
-            const isCurrentMonth = today.getFullYear() === year && (today.getMonth() + 1) === month;
-            const currentDay = today.getDate();
-
-            let html = '<div class="calendar-grid">';
-            const days = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
-            days.forEach(d => html += `<div class="calendar-header">${d}</div>`);
-
-            for(let i = 0; i < startDayIndex; i++) html += `<div class="calendar-cell empty"></div>`;
-
-            for(let i = 1; i <= daysInMonth; i++) {
-                let dateStr = `${year}-${String(month).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-                let data = calendarData[dateStr] || { income: 0, expense: 0, is_anomaly: false };
-                let dayClass = (isCurrentMonth && i === currentDay) ? 'date-today' : '';
-                let content = `<div class="date-num ${dayClass}">${i}</div>`;
-                if (data.is_anomaly) content += `<i class="bi bi-lightning-fill anomaly-icon" title="Chi tiêu cao bất thường"></i>`;
-                
-                let moneyHtml = '<div class="mt-1">';
-                if (data.income > 0) moneyHtml += `<div class="cal-money text-success">+${formatMoney(data.income)}</div>`;
-                if (data.expense > 0) moneyHtml += `<div class="cal-money text-danger">-${formatMoney(data.expense)}</div>`;
-                moneyHtml += '</div>';
-
-                html += `<div class="calendar-cell position-relative" onclick="showDaily(${i}, ${month})">${content}${moneyHtml}</div>`;
-            }
-            html += '</div>';
-            document.getElementById('calendarContainer').innerHTML = html;
-        }
-
-        async function showDaily(day, month) {
-            // Hiện panel và cuộn mượt xuống
-            const card = document.getElementById('dailyTransactionsCard');
-            card.style.display = 'block';
-            document.getElementById('selectedDateTitle').innerText = `Giao dịch ngày ${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}`;
-            card.scrollIntoView({ behavior: 'smooth' });
-
-            const listContainer = document.getElementById('dailyTransactionsList');
-            listContainer.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary spinner-border-sm me-2"></div>Đang tải dữ liệu...</div>';
-
-            // Ghép chuỗi YYYY-MM-DD để gửi lên API
-            const pickerValue = document.getElementById('monthPicker').value; 
-            const [year] = pickerValue.split('-');
-            const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-
-            try {
-                const res = await fetch(`../../controllers/AnalyticsController.php?action=get_daily_transactions&date=${dateStr}`);
-                const response = await res.json();
-
-                if (response.status && response.data.length > 0) {
-                    let html = '';
-                    response.data.forEach(t => {
-                        const isIncome = t.category_type === 'income';
-                        const sign = isIncome ? '+' : '-';
-                        const colorClass = isIncome ? 'text-success' : 'text-danger';
-                        const icon = isIncome ? 'bi-arrow-down-circle-fill' : 'bi-arrow-up-circle-fill';
-                        const noteText = t.note ? t.note : '<span class="opacity-50">Không có ghi chú</span>';
-                        
-                        // Gọi hàm lấy màu ngẫu nhiên từ app.js của bạn
-                        const iconColor = typeof getCategoryColor === 'function' ? getCategoryColor(t.category_name) : '#6c757d';
-
-                        html += `
-                        <div class="d-flex justify-content-between align-items-center mb-3 p-3 border rounded-4 bg-white shadow-sm transition-hover">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 45px; height: 45px; background-color: ${iconColor}">
-                                    <i class="bi ${icon} fs-5"></i>
-                                </div>
-                                <div>
-                                    <div class="fw-bold text-dark fs-6">${t.category_name}</div>
-                                    <div class="small text-muted">${noteText} • <i class="bi bi-clock"></i> ${t.time_val || '00:00'}</div>
-                                </div>
-                            </div>
-                            <div class="fw-bold fs-5 ${colorClass}">
-                                ${sign}${formatMoney(t.amount)} đ
-                            </div>
-                        </div>`;
-                    });
-                    listContainer.innerHTML = html;
-                } else {
-                    listContainer.innerHTML = `
-                        <div class="text-center py-5 text-muted">
-                            <i class="bi bi-inbox fs-1 d-block mb-3 text-secondary opacity-25"></i>
-                            <div class="fst-italic">Không có giao dịch nào phát sinh trong ngày này.</div>
-                        </div>`;
-                }
-            } catch (error) {
-                console.error(error);
-                listContainer.innerHTML = '<div class="text-danger text-center py-3"><i class="bi bi-x-circle me-2"></i>Lỗi tải dữ liệu.</div>';
-            }
-        }
-
         document.addEventListener('DOMContentLoaded', () => {
-            const today = new Date();
-            const yyyy = today.getFullYear(); let mm = today.getMonth() + 1;
-            document.getElementById('monthPicker').value = `${yyyy}-${mm < 10 ? '0'+mm : mm}`;
-            document.getElementById('currentMonthDisplay').innerText = `Tháng ${mm < 10 ? '0'+mm : mm}, ${yyyy}`;
+            const now = new Date();
+            document.getElementById('monthPicker').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2, '0')}`;
             loadCalendarData();
         });
     </script>

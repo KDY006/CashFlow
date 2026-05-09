@@ -15,25 +15,28 @@ $categoryBUS = new CategoryBUS();
 $userId = $_SESSION['user_id'];
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 
+// TRẢ VỀ CẤU TRÚC CÂY DANH MỤC
+if ($action === 'get_tree') {
+    $tree = $categoryBUS->getCategoryTree($userId);
+    echo json_encode(['status' => true, 'data' => $tree]);
+    exit();
+}
+
+// THÊM DANH MỤC (Có parent_id)
 if ($action === 'add') {
-    $result = $categoryBUS->addCategory($userId, $_POST['name'], $_POST['type']);
+    $name = $_POST['name'] ?? '';
+    $type = $_POST['type'] ?? 'expense';
+    $parentId = !empty($_POST['parent_id']) ? $_POST['parent_id'] : null;
+
+    $result = $categoryBUS->addCategory($userId, $name, $type, $parentId);
     echo json_encode($result);
     exit();
 }
 
+// XÓA DANH MỤC
 if ($action === 'delete') {
     $result = $categoryBUS->deleteCategory($_POST['id'], $userId);
     echo json_encode($result);
-    exit();
-}
-
-if ($action === 'get_all') {
-    $categories = $categoryBUS->getAllCategories($userId);
-    // Bổ sung thêm mã màu CSS vào dữ liệu JSON trả về cho JS
-    foreach ($categories as &$cat) {
-        $cat['color_class'] = FormatHelper::getCategoryBadgeColor($cat['id']);
-    }
-    echo json_encode(['status' => true, 'data' => $categories]);
     exit();
 }
 ?>

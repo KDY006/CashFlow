@@ -50,20 +50,25 @@ if ($action === 'get') {
     exit();
 }
 
-// LẤY DANH SÁCH GIAO DỊCH (Để JS tự vẽ lại danh sách mượt mà)
+// LẤY DANH SÁCH GIAO DỊCH (Bản V2 hỗ trợ lọc Cha/Con)
 if ($action === 'get_all') {
-    $transactions = $transactionBUS->getTransactions($userId, 50, 0);
+    $transactionDAL = new TransactionDAL();
+    $transactions = $transactionDAL->getAllTransactionsRaw($userId);
+    
     $arr = [];
     foreach ($transactions as $t) {
         $arr[] = [
-            'id' => $t->getId(),
-            'category_name' => $t->getCategoryName(),
-            'category_type' => $t->getCategoryType(),
-            'amount' => $t->getAmount(),
-            // Định dạng sẵn dữ liệu từ PHP để JS không phải tính toán lại
-            'formatted_amount' => FormatHelper::formatCurrency($t->getAmount()),
-            'formatted_date' => FormatHelper::formatDate($t->getTransactionDate()),
-            'note' => $t->getNote()
+            'id' => $t['id'],
+            'category_id' => $t['category_id'],
+            'category_name' => $t['category_name'],
+            'category_type' => $t['category_type'],
+            'parent_id' => $t['parent_id'],
+            'parent_name' => $t['parent_name'] ?? ($t['category_type'] === 'income' ? 'Thu nhập' : 'Khác'),
+            'amount' => $t['amount'],
+            'formatted_amount' => FormatHelper::formatCurrency($t['amount']),
+            'formatted_date' => FormatHelper::formatDate($t['transaction_date']),
+            'raw_date' => $t['transaction_date'],
+            'note' => $t['note']
         ];
     }
     echo json_encode(['status' => true, 'data' => $arr]);

@@ -44,10 +44,8 @@
 </div>
 
 <script>
-    // KHÔNG khởi tạo Modal ngay lúc load trang nữa
     let globalTransModal = null;
 
-    // --- CÁC HÀM DÙNG CHUNG ---
     if (typeof formatNumberInput === 'undefined') {
         window.formatNumberInput = function(value) {
             value = value.replace(/\D/g, ""); 
@@ -74,7 +72,6 @@
         };
     }
 
-    // --- XỬ LÝ NHẬP TIỀN ---
     const gAmountInput = document.getElementById('globalAmountDisplay');
     const gHiddenAmount = document.getElementById('globalAmount');
     const gAmountWords = document.getElementById('globalAmountInWords');
@@ -86,9 +83,8 @@
         gAmountWords.innerText = rawValue ? readVietnameseNumber(parseInt(rawValue)) : "";
     });
 
-    // --- MỞ MODAL VÀ NẠP DANH MỤC ---
+    // Gọi API get_tree để lấy cấu trúc Cha Con
     async function openGlobalAddModal() {
-        // Lúc này mới khởi tạo Modal (đảm bảo Bootstrap đã load xong)
         if (!globalTransModal) {
             globalTransModal = new bootstrap.Modal(document.getElementById('globalTransactionModal'));
         }
@@ -101,19 +97,36 @@
         gAmountWords.innerText = '';
         gHiddenAmount.value = '';
 
-        const res = await fetch('../../controllers/CategoryController.php?action=get_all');
-        const result = await res.json();
         const select = document.getElementById('globalCategoryId');
         select.innerHTML = '<option value="" disabled selected>-- Chọn danh mục --</option>';
-        result.data.forEach(c => {
-            const typeText = c.type === 'income' ? 'Thu' : 'Chi';
-            select.innerHTML += `<option value="${c.id}">${c.name} (${typeText})</option>`;
-        });
+
+        try {
+            const res = await fetch('../../controllers/CategoryController.php?action=get_tree');
+            const result = await res.json();
+            
+            if (result.status) {
+                result.data.forEach(parent => {
+                    if (parent.type === 'income') {
+                        select.innerHTML += `<option value="${parent.id}">🟢 ${parent.name} (Thu)</option>`;
+                    } else {
+                        let optgroup = `<optgroup label="🔴 ${parent.name}">`;
+                        if (parent.children && parent.children.length > 0) {
+                            parent.children.forEach(child => {
+                                optgroup += `<option value="${child.id}">${child.name}</option>`;
+                            });
+                        }
+                        optgroup += `</optgroup>`;
+                        select.innerHTML += optgroup;
+                    }
+                });
+            }
+        } catch (error) {
+            console.error("Chưa có API get_tree, vui lòng hoàn thành phần Backend.");
+        }
 
         globalTransModal.show();
     }
 
-    // --- SUBMIT FORM BẰNG AJAX ---
     document.getElementById('globalTransactionForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const res = await fetch('../../controllers/TransactionController.php', { method: 'POST', body: new FormData(e.target) });
@@ -127,14 +140,8 @@
 
         if (result.status) {
             if (globalTransModal) globalTransModal.hide();
-            
-            // Trang Giao dịch
             if (typeof fetchTransactions === 'function') fetchTransactions();
-            
-            // Trang Ngân sách
             if (typeof fetchBudgets === 'function') fetchBudgets();
-            
-            // THÊM DÒNG NÀY: Dành riêng cho trang Tổng quan (Dashboard)
             if (typeof loadDashboardData === 'function') loadDashboardData();
         }
     });

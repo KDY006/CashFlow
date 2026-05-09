@@ -13,42 +13,29 @@ if (!isset($_SESSION['user_id'])) {
 
 $userId = $_SESSION['user_id'];
 $analyticsBUS = new AnalyticsBUS();
-
 $action = $_GET['action'] ?? 'get_dashboard';
 
+// 1. DASHBOARD V2 (Giao diện tổng quan mới)
 if ($action === 'get_dashboard') {
-    // Nhận biến month định dạng YYYY-MM từ Input Month của Frontend
-    $month = $_GET['month'] ?? date('Y-m');
+    $filterType = $_GET['filter_type'] ?? 'month';
+    $filterVal = $_GET['filter_val'] ?? date('Y-m');
     
-    // Gọi BUS xử lý (BUS của bạn đã lo toàn bộ logic bên trong rất mượt)
-    $result = $analyticsBUS->getDashboardData($userId, $month);
+    // Đảm bảo gọi đúng hàm getDashboardV2Data
+    $result = $analyticsBUS->getDashboardV2Data($userId, $filterType, $filterVal);
     
-    // Trả về JSON cho Client, bọc trong object data để frontend dễ xử lý
-    echo json_encode(['status' => true, 'data' => $result]);
-    exit();
-}
-
-// Thêm action mới vào cấu trúc if/else hiện tại
-if ($action === 'get_dashboard') {
-    $month = $_GET['month'] ?? date('Y-m');
-    $result = $analyticsBUS->getDashboardData($userId, $month);
     echo json_encode(['status' => true, 'data' => $result]);
     exit();
 } 
-// LÀN ĐƯỜNG ƯU TIÊN MỚI
+
+// 2. LẤY DỮ LIỆU LỊCH
 elseif ($action === 'get_calendar') {
     $month = $_GET['month'] ?? date('Y-m');
     $result = $analyticsBUS->getCalendarOnly($userId, $month);
     echo json_encode(['status' => true, 'data' => $result]);
     exit();
 }
-elseif ($action === 'get_calendar') {
-    $month = $_GET['month'] ?? date('Y-m');
-    $result = $analyticsBUS->getCalendarOnly($userId, $month);
-    echo json_encode(['status' => true, 'data' => $result]);
-    exit();
-}
-// THÊM NHÁNH MỚI NÀY VÀO ĐÂY:
+
+// 3. LẤY CHI TIẾT GIAO DỊCH TRONG NGÀY
 elseif ($action === 'get_daily_transactions') {
     $date = $_GET['date'] ?? date('Y-m-d');
     $result = $analyticsBUS->getDailyTransactions($userId, $date);

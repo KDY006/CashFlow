@@ -1,23 +1,56 @@
 <?php
+// Tệp: GUI/components/header.php
+
 // 1. CẤU HÌNH MENU DÙNG CHUNG CHO CẢ DESKTOP VÀ MOBILE
 $menuItems = [
     ['url' => '../analytics/dashboard.php', 'icon' => 'bi-house-door-fill', 'title' => 'Tổng quan', 'keyword' => 'dashboard'],
+    ['url' => '../calendar/index.php', 'icon' => 'bi-calendar3', 'title' => 'Lịch tháng', 'keyword' => 'calendar'],
     ['url' => '../transactions/index.php', 'icon' => 'bi-cash-stack', 'title' => 'Giao dịch', 'keyword' => 'transactions'],
-    ['url' => '../calendar/index.php', 'icon' => 'bi-calendar3', 'title' => 'Lịch', 'keyword' => 'calendar'],
-    ['url' => '../budgets/index.php', 'icon' => 'bi-bullseye', 'title' => 'Ngân sách', 'keyword' => 'budgets'],
+    ['url' => '../budgets/index.php', 'icon' => 'bi-bullseye', 'title' => 'Danh mục và Ngân sách', 'keyword' => 'budgets'],
     ['url' => '../ai/advisor.php', 'icon' => 'bi-robot', 'title' => 'Cố vấn AI', 'keyword' => 'ai'],
 ];
 $currentUri = $_SERVER['REQUEST_URI'];
 ?>
 
-<nav class="navbar navbar-expand-md sticky-top py-2 px-3">
+<style>
+    /* CSS CHO NÚT THÊM GIAO DỊCH NỔI Ở GÓC DƯỚI (MOBILE) */
+    .fab-mobile {
+        position: fixed;
+        bottom: 85px; /* Nằm cách đáy 85px (tức là nổi ngay trên thanh Bottom Nav) */
+        right: 20px;  /* Cách lề phải 20px */
+        z-index: 1050; /* Đảm bảo luôn nằm trên cùng, không bị che khuất */
+    }
+    .fab-mobile .btn-float {
+        width: 56px; 
+        height: 56px; 
+        border-radius: 50%; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(25, 135, 84, 0.4); /* Đổ bóng màu xanh lá */
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .fab-mobile .btn-float:active {
+        transform: scale(0.9); /* Hiệu ứng lún xuống khi bấm */
+        box-shadow: 0 2px 6px rgba(25, 135, 84, 0.4);
+    }
+    
+    /* CSS Bổ sung cho thanh Bottom Nav nếu thiếu */
+    .bottom-nav {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+    }
+</style>
+
+<nav class="navbar navbar-expand-md sticky-top py-2 px-3 bg-white shadow-sm">
     <div class="container-fluid align-items-center">
         
         <a class="navbar-brand text-success fw-bold d-flex align-items-center gap-2" href="../analytics/dashboard.php">
             <i class="bi bi-wallet2 fs-3"></i><span>CashFlow</span>
         </a>
 
-        <ul class="navbar-nav mx-auto desktop-nav d-flex flex-row">
+        <ul class="navbar-nav mx-auto desktop-nav d-none d-md-flex flex-row gap-2">
             <?php foreach ($menuItems as $item): ?>
                 <li class="nav-item">
                     <a class="nav-link <?= strpos($currentUri, $item['keyword']) !== false ? 'active' : '' ?>" href="<?= $item['url'] ?>" title="<?= $item['title'] ?>">
@@ -48,23 +81,19 @@ $currentUri = $_SERVER['REQUEST_URI'];
     </div>
 </nav>
 
-<nav class="bottom-nav d-md-none">
-    <?php foreach ($menuItems as $index => $item): ?>
-        
-        <?php if ($index == 2): ?>
-            <div class="fab-container">
-                <a href="javascript:void(0)" onclick="openGlobalAddModal()" class="fab-button shadow">
-                    <i class="bi bi-plus-lg text-white"></i>
-                </a>
-            </div>
-        <?php endif; ?>
-
-        <a href="<?= $item['url'] ?>" class="bottom-nav-item <?= strpos($currentUri, $item['keyword']) !== false ? 'active' : '' ?>">
+<nav class="bottom-nav d-md-none bg-white shadow-lg border-top">
+    <?php foreach ($menuItems as $item): ?>
+        <a href="<?= $item['url'] ?>" class="bottom-nav-item <?= strpos($currentUri, $item['keyword']) !== false ? 'active' : '' ?>" style="flex: 1; text-align: center;">
             <i class="bi <?= $item['icon'] ?>"></i>
-            <span><?= $item['title'] ?></span>
+            <span class="d-block" style="font-size: 0.7rem;"><?= $item['title'] ?></span>
         </a>
-        
     <?php endforeach; ?>
 </nav>
+
+<div class="fab-mobile d-md-none">
+    <a href="javascript:void(0)" onclick="openGlobalAddModal()" class="btn btn-success btn-float">
+        <i class="bi bi-plus-lg fs-3 text-white"></i>
+    </a>
+</div>
 
 <?php require_once __DIR__ . '/global-add-modal.php'; ?>

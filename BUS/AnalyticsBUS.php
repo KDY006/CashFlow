@@ -263,5 +263,161 @@ class AnalyticsBUS
         $analyticsDal = new AnalyticsDAL();
         return $analyticsDal->getDailyTransactions($user_id, $date);
     }
+
+    // ==========================================
+    // HÀM XỬ LÝ CHO DASHBOARD V2
+    // ==========================================
+    public function getDashboardV2Data(int $userId, string $filterType, string $filterVal): array
+    {
+        $analyticsDal = new AnalyticsDAL();
+        $stats = $analyticsDal->getDashboardV2Stats($userId, $filterType, $filterVal);
+        
+        $total_income = (float)($stats['total_income'] ?? 0);
+        $total_expense = (float)($stats['total_expense'] ?? 0);
+
+        // Hàm helper tính %
+        $formatList = function($dataList, $totalAmount) {
+            $result = [];
+            foreach ($dataList as $row) {
+                $amt = (float)$row['total'];
+                $pct = $totalAmount > 0 ? round(($amt / $totalAmount) * 100, 1) : 0;
+                $result[] = [
+                    'name' => $row['category_name'],
+                    'amount' => $amt,
+                    'amount_fmt' => FormatHelper::formatCurrency($amt),
+                    'percent' => $pct
+                ];
+            }
+            return $result;
+        };
+
+        $expense_parent = $formatList($analyticsDal->getExpenseByParentV2($userId, $filterType, $filterVal), $total_expense);
+        $expense_child = $formatList($analyticsDal->getExpenseByChildV2($userId, $filterType, $filterVal), $total_expense);
+        $income_list = $formatList($analyticsDal->getIncomeV2($userId, $filterType, $filterVal), $total_income);
+
+        // Lấy Ngân sách (Chỉ lấy theo tháng. Nếu xem Tuần/Năm thì mặc định lấy tháng hiện tại hoặc tháng của bộ lọc)
+        $b_year = (int)date('Y'); $b_month = (int)date('m');
+        if ($filterType === 'month') {
+            $parts = explode('-', $filterVal);
+            $b_year = (int)$parts[0]; $b_month = (int)$parts[1];
+        }
+        
+        $budgetDal = new BudgetDAL();
+        $budgetsRaw = $budgetDal->getBudgetsByMonth($userId, $b_month, $b_year);
+        $budgets = [];
+        foreach ($budgetsRaw as $b) {
+            $budgets[] = [
+                'name' => $b->getCategoryName(),
+                'limit' => $b->getAmountLimit(),
+                'spent' => $b->getTotalSpent(),
+                'percent' => $b->getProgressPercentage(),
+                'remain_fmt' => FormatHelper::formatCurrency(abs($b->getAmountLimit() - $b->getTotalSpent()))
+            ];
+        }
+        // Sắp xếp hũ ngân sách: Hũ nào % tiêu nhiều nhất lên đầu
+        usort($budgets, fn($a, $b) => $b['percent'] <=> $a['percent']);
+
+        $historicalPeriods = [];
+        
+        if ($filterType === 'year') {
+            $currentYear = (int)$filterVal;
+            for ($i = -5; $i <= 6; $i++) {
+                $y = $currentYear + $i;
+                $historicalPeriods[] = ['label' => "Năm $y", 'sql' => "YEAR(t.transaction_date) = $y"];
+            }
+        } elseif ($filterType === 'week') {
+            $parts = explode('-', $filterVal);
+            $currY = (int)$parts[0];
+            $currM = (int)$parts[1];
+            $currW = (int)$parts[2];
+            
+            // Hàm Helper tính toán nhanh Tháng đó có bao nhiêu Tuần (4, 5 hay 6 tuần)
+            $getMaxWeeks = function($y, $m) {
+                $firstDayStr = sprintf('%04d-%02d-01', $y, $m);
+                $lastDay = (int)date('t', strtotime($firstDayStr));
+                $startOffset = (int)date('N', strtotime($firstDayStr)) - 1; 
+                return ceil(($lastDay + $startOffset) / 7);
+            };
+
+            // Dịch chuyển tiến/lùi 12 tuần (Cộng trừ đại số)
+            for ($i = -5; $i <= 6; $i++) {
+                $y = $currY; $m = $currM; $w = $currW;
+                
+                if ($i < 0) {
+                    $steps = abs($i);
+                    while ($steps > 0) {
+                        $w--;
+                        if ($w < 1) { // Lùi về tháng trước
+                            $m--; if ($m < 1) { $m = 12; $y--; }
+                            $w = $getMaxWeeks($y, $m);
+                        }
+                        $steps--;
+                    }
+                } elseif ($i > 0) {
+                    $steps = $i;
+                    while ($steps > 0) {
+                        $w++;
+                        $maxW = $getMaxWeeks($y, $m);
+                        if ($w > $maxW) { // Tiến lên tháng sau
+                            $w = 1; $m++; if ($m > 12) { $m = 1; $y++; }
+                        }
+                        $steps--;
+                    }
+                }
+                
+                $padM = str_pad($m, 2, '0', STR_PAD_LEFT);
+                $firstDayStr = sprintf('%04d-%02d-01', $y, $m);
+                $historicalPeriods[] = [
+                    'label' => "T$w/Th$padM",
+                    'sql' => "YEAR(t.transaction_date) = $y AND MONTH(t.transaction_date) = $m AND CEIL((DAY(t.transaction_date) + WEEKDAY('$firstDayStr')) / 7) = $w"
+                ];
+            }
+        } else { // filterType === month
+            $parts = explode('-', $filterVal);
+            $currY = (int)$parts[0];
+            $currM = (int)$parts[1];
+            
+            for ($i = -5; $i <= 6; $i++) {
+                $time = strtotime(sprintf('%04d-%02d-01', $currY, $currM) . " $i months");
+                $y = date('Y', $time); $m = date('n', $time);
+                $padM = str_pad($m, 2, '0', STR_PAD_LEFT);
+                $historicalPeriods[] = [
+                    'label' => "Th$padM/$y", 
+                    'sql' => "YEAR(t.transaction_date) = $y AND MONTH(t.transaction_date) = $m"
+                ];
+            }
+        }
+
+        // Đảm bảo Hũ Ngân sách luôn load theo đúng Tháng được chọn (kể cả khi xem theo tuần)
+        if ($filterType === 'month' || $filterType === 'week') {
+            $parts = explode('-', $filterVal);
+            $b_year = (int)$parts[0]; 
+            $b_month = (int)$parts[1];
+        } else {
+            $b_year = (int)$filterVal;
+            $b_month = (int)date('m');
+        }
+
+        $analyticsDal = new AnalyticsDAL();
+        $history = $analyticsDal->getHistoricalData($userId, $historicalPeriods);
+
+        // Tính chênh lệch cho overview
+        $net_cashflow = $total_income - $total_expense;
+
+        return [
+            'overview' => [
+                'total_expense' => $total_expense,
+                'total_expense_fmt' => FormatHelper::formatCurrency($total_expense),
+                'total_income' => $total_income,
+                'total_income_fmt' => FormatHelper::formatCurrency($total_income),
+                'net_cashflow' => $net_cashflow,
+                'net_cashflow_fmt' => FormatHelper::formatCurrency(abs($net_cashflow)),
+            ],
+            'history_chart' => $history,
+            'expense' => ['parent' => $expense_parent, 'child' => $expense_child],
+            'income' => $income_list,
+            'budgets' => $budgets
+        ];
+    }
 }
 ?>

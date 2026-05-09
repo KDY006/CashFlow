@@ -332,5 +332,127 @@ class AnalyticsDAL
         $stmt->execute([':user_id' => $user_id, ':date_val' => $date]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    // ==========================================
+    // CÁC HÀM CHO DASHBOARD V2 (GIAO DIỆN MOMO)
+    // ==========================================
+    private function buildTimeCondition(string $filterType, string $filterVal, array &$params): string
+    {
+        if ($filterType === 'year') {
+            $params[':year'] = $filterVal;
+            return "YEAR(t.transaction_date) = :year";
+        } elseif ($filterType === 'week') {
+            // Tách Dữ liệu: Ví dụ '2026-05-2' thành Năm 2026, Tháng 5, Tuần 2
+            $parts = explode('-', $filterVal);
+            $params[':year'] = $parts[0];
+            $params[':month'] = $parts[1];
+            $params[':week'] = $parts[2];
+            $firstDayStr = $parts[0] . '-' . $parts[1] . '-01';
+            
+            // Công thức SQL bóc tách chính xác Tuần của Tháng
+            return "YEAR(t.transaction_date) = :year AND MONTH(t.transaction_date) = :month AND CEIL((DAY(t.transaction_date) + WEEKDAY('$firstDayStr')) / 7) = :week";
+        } else { // default is month
+            $params[':month'] = $filterVal;
+            return "DATE_FORMAT(t.transaction_date, '%Y-%m') = :month";
+        }
+    }
+
+    public function getDashboardV2Stats(int $userId, string $filterType, string $filterVal): array
+    {
+        $params = [':uid' => $userId];
+        $where = $this->buildTimeCondition($filterType, $filterVal, $params);
+
+        $sql = "SELECT
+                    SUM(CASE WHEN c.type = 'income' THEN t.amount ELSE 0 END) AS total_income,
+                    SUM(CASE WHEN c.type = 'expense' THEN t.amount ELSE 0 END) AS total_expense
+                FROM transactions t
+                JOIN categories c ON t.category_id = c.id
+                WHERE t.user_id = :uid AND $where";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: ['total_income' => 0, 'total_expense' => 0];
+    }
+
+    public function getExpenseByParentV2(int $userId, string $filterType, string $filterVal): array
+    {
+        $params = [':uid' => $userId];
+        $where = $this->buildTimeCondition($filterType, $filterVal, $params);
+
+        $sql = "SELECT
+                    COALESCE(p.name, c.name) AS category_name,
+                    SUM(t.amount) AS total
+                FROM transactions t
+                JOIN categories c ON t.category_id = c.id
+                LEFT JOIN categories p ON c.parent_id = p.id
+                WHERE t.user_id = :uid AND c.type = 'expense' AND $where
+                GROUP BY COALESCE(p.id, c.id), COALESCE(p.name, c.name)
+                ORDER BY total DESC";
+                
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getExpenseByChildV2(int $userId, string $filterType, string $filterVal): array
+    {
+        $params = [':uid' => $userId];
+        $where = $this->buildTimeCondition($filterType, $filterVal, $params);
+
+        $sql = "SELECT c.name AS category_name, SUM(t.amount) AS total
+                FROM transactions t
+                JOIN categories c ON t.category_id = c.id
+                WHERE t.user_id = :uid AND c.type = 'expense' AND $where
+                GROUP BY c.id, c.name
+                ORDER BY total DESC";
+                
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getIncomeV2(int $userId, string $filterType, string $filterVal): array
+    {
+        $params = [':uid' => $userId];
+        $where = $this->buildTimeCondition($filterType, $filterVal, $params);
+
+        $sql = "SELECT c.name AS category_name, SUM(t.amount) AS total
+                FROM transactions t
+                JOIN categories c ON t.category_id = c.id
+                WHERE t.user_id = :uid AND c.type = 'income' AND $where
+                GROUP BY c.id, c.name
+                ORDER BY total DESC";
+                
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Lấy dữ liệu Thu/Chi cho biểu đồ lịch sử 12 kỳ
+    public function getHistoricalData(int $userId, array $periods): array
+    {
+        $results = [];
+        foreach ($periods as $p) {
+            $params = [':uid' => $userId];
+            // $p['condition'] sẽ là chuỗi SQL do BUS tạo ra (VD: YEAR(date) = 2026 AND MONTH(date) = 5)
+            $sql = "SELECT 
+                        SUM(CASE WHEN c.type = 'income' THEN t.amount ELSE 0 END) AS income,
+                        SUM(CASE WHEN c.type = 'expense' THEN t.amount ELSE 0 END) AS expense
+                    FROM transactions t
+                    JOIN categories c ON t.category_id = c.id
+                    WHERE t.user_id = :uid AND " . $p['sql'];
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute($params);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            $results[] = [
+                'label'   => $p['label'],
+                'income'  => (float)($row['income'] ?? 0),
+                'expense' => (float)($row['expense'] ?? 0)
+            ];
+        }
+        return $results;
+    }
 }
 ?>

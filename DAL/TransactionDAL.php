@@ -169,5 +169,22 @@ class TransactionDAL {
             return false;
         }
     }
+
+    // ==========================================
+    // 6. LẤY GIAO DỊCH VỚI ĐẦY ĐỦ CHA CON (Dành cho bản V2)
+    // ==========================================
+    public function getAllTransactionsRaw($userId) {
+        $sql = "SELECT t.*, c.name as category_name, c.type as category_type, 
+                       p.name as parent_name, p.id as parent_id
+                FROM transactions t 
+                JOIN categories c ON t.category_id = c.id 
+                LEFT JOIN categories p ON c.parent_id = p.id 
+                WHERE t.user_id = :user_id 
+                ORDER BY t.transaction_date DESC, t.id DESC";
+                
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':user_id' => $userId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
 ?>

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 09, 2026 at 05:51 AM
+-- Generation Time: May 09, 2026 at 02:06 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -114,6 +114,7 @@ INSERT INTO `budgets` (`id`, `user_id`, `category_id`, `amount_limit`, `month`, 
 CREATE TABLE `categories` (
   `id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
+  `parent_id` int(11) DEFAULT NULL,
   `name` varchar(100) NOT NULL,
   `type` enum('income','expense') NOT NULL,
   `created_at` datetime DEFAULT current_timestamp()
@@ -123,17 +124,34 @@ CREATE TABLE `categories` (
 -- Dumping data for table `categories`
 --
 
-INSERT INTO `categories` (`id`, `user_id`, `name`, `type`, `created_at`) VALUES
-(8, 1, 'Lương', 'income', '2026-04-28 21:48:18'),
-(9, 1, 'Ăn bữa', 'expense', '2026-04-28 21:48:33'),
-(10, 1, 'Uống nước', 'expense', '2026-04-28 21:48:37'),
-(11, 1, 'Tip', 'income', '2026-04-28 21:48:44'),
-(13, 1, 'Học tập', 'expense', '2026-04-29 00:00:00'),
-(14, 1, 'Mua sắm', 'expense', '2026-04-29 00:00:00'),
-(15, 1, 'Freelance', 'income', '2026-04-29 00:00:00'),
-(16, 1, 'Sức khỏe', 'expense', '2026-04-29 00:00:00'),
-(21, 1, 'Khác', 'expense', '2026-04-30 00:26:18'),
-(22, 1, 'Đi chơi với bồ', 'expense', '2026-04-30 00:35:11');
+INSERT INTO `categories` (`id`, `user_id`, `parent_id`, `name`, `type`, `created_at`) VALUES
+(8, 1, NULL, 'Lương', 'income', '2026-04-28 21:48:18'),
+(9, 1, NULL, 'Ăn bữa', 'expense', '2026-04-28 21:48:33'),
+(10, 1, NULL, 'Uống nước', 'expense', '2026-04-28 21:48:37'),
+(11, 1, NULL, 'Tip', 'income', '2026-04-28 21:48:44'),
+(13, 1, NULL, 'Học tập', 'expense', '2026-04-29 00:00:00'),
+(14, 1, NULL, 'Mua sắm', 'expense', '2026-04-29 00:00:00'),
+(15, 1, NULL, 'Freelance', 'income', '2026-04-29 00:00:00'),
+(16, 1, NULL, 'Sức khỏe', 'expense', '2026-04-29 00:00:00'),
+(21, 1, NULL, 'Khác', 'expense', '2026-04-30 00:26:18'),
+(22, 1, NULL, 'Đi chơi với bồ', 'expense', '2026-04-30 00:35:11'),
+(23, 1, NULL, 'Chi phí cố định', 'expense', '2026-05-09 18:45:25'),
+(24, 1, NULL, 'Chi phí phát sinh', 'expense', '2026-05-09 18:45:25'),
+(25, 1, NULL, 'Đầu tư tiết kiệm', 'expense', '2026-05-09 18:45:25'),
+(26, 1, NULL, 'Chi tiêu - Sinh hoạt', 'expense', '2026-05-09 18:45:25'),
+(27, 1, 23, 'Hóa đơn', 'expense', '2026-05-09 18:45:25'),
+(28, 1, 23, 'Nhà cửa', 'expense', '2026-05-09 18:45:25'),
+(29, 1, 23, 'Người thân', 'expense', '2026-05-09 18:45:25'),
+(30, 1, 24, 'Mua sắm', 'expense', '2026-05-09 18:45:25'),
+(31, 1, 24, 'Giải trí', 'expense', '2026-05-09 18:45:25'),
+(32, 1, 24, 'Làm đẹp', 'expense', '2026-05-09 18:45:25'),
+(33, 1, 24, 'Sức khỏe', 'expense', '2026-05-09 18:45:25'),
+(34, 1, 24, 'Từ thiện', 'expense', '2026-05-09 18:45:25'),
+(35, 1, 25, 'Đầu tư', 'expense', '2026-05-09 18:45:25'),
+(36, 1, 25, 'Học tập', 'expense', '2026-05-09 18:45:25'),
+(37, 1, 26, 'Chợ, siêu thị', 'expense', '2026-05-09 18:45:25'),
+(38, 1, 26, 'Ăn uống', 'expense', '2026-05-09 18:45:25'),
+(39, 1, 26, 'Di chuyển', 'expense', '2026-05-09 18:45:25');
 
 -- --------------------------------------------------------
 
@@ -146,7 +164,7 @@ CREATE TABLE `transactions` (
   `user_id` int(11) NOT NULL,
   `category_id` int(11) NOT NULL,
   `amount` decimal(15,2) NOT NULL,
-  `transaction_date` date NOT NULL,
+  `transaction_date` datetime NOT NULL,
   `note` text DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -156,26 +174,26 @@ CREATE TABLE `transactions` (
 --
 
 INSERT INTO `transactions` (`id`, `user_id`, `category_id`, `amount`, `transaction_date`, `note`, `created_at`) VALUES
-(3, 1, 9, 35000.00, '2026-04-28', 'Ăn trưa', '2026-04-28 22:46:08'),
-(4, 1, 9, 32000.00, '2026-04-28', 'Ăn tối', '2026-04-28 22:46:32'),
-(5, 1, 11, 500000.00, '2026-04-28', 'Anh Trân web bán hàng', '2026-04-28 22:46:47'),
-(8, 1, 9, 30000.00, '2026-04-27', 'Ăn trưa một mình', '2026-04-28 23:48:29'),
-(9, 1, 8, 3000000.00, '2026-04-06', 'Lương SSMC tháng 3', '2026-04-28 23:49:09'),
-(10, 1, 9, 6000.00, '2026-04-27', 'Mua trứng', '2026-04-28 23:49:40'),
-(11, 1, 10, 15000.00, '2026-04-19', 'cà phê', '2026-04-28 23:50:17'),
-(34, 1, 15, 1500000.00, '2026-04-10', 'Nhận tiền code dạo giao diện Web', '2026-04-29 08:00:00'),
-(35, 1, 11, 200000.00, '2026-04-15', 'Tool dự báo tài chính', '2026-04-29 08:00:00'),
-(36, 1, 13, 120000.00, '2026-04-12', 'Mua giáo trình Lập trình Web', '2026-04-29 08:00:00'),
-(37, 1, 10, 35000.00, '2026-04-14', 'Cà phê Highland làm báo cáo Lab', '2026-04-29 08:00:00'),
-(38, 1, 13, 40000.00, '2026-04-18', 'In tài liệu môn Mạng máy tính', '2026-04-29 08:00:00'),
-(39, 1, 9, 45000.00, '2026-04-20', 'Cơm trưa căn tin', '2026-04-29 08:00:00'),
-(40, 1, 9, 50000.00, '2026-04-22', 'Bún bò xào', '2026-04-29 08:00:00'),
-(41, 1, 14, 450000.00, '2026-04-25', 'Mua áo thun local brand', '2026-04-29 08:00:00'),
-(42, 1, 16, 80000.00, '2026-04-26', 'Mua thuốc cảm', '2026-04-29 08:00:00'),
-(43, 1, 10, 60000.00, '2026-04-29', 'Trà sữa Phúc Long', '2026-04-29 08:00:00'),
-(44, 1, 10, 600000.00, '2026-04-29', 'Bao công ty', '2026-04-29 09:04:30'),
-(46, 1, 9, 30000.00, '2026-05-04', 'Ăn tối', '2026-05-05 00:15:30'),
-(47, 1, 21, 10000000.00, '2026-04-23', 'Bị lừa', '2026-05-05 01:12:56');
+(3, 1, 9, 35000.00, '2026-04-28 00:00:00', 'Ăn trưa', '2026-04-28 22:46:08'),
+(4, 1, 9, 32000.00, '2026-04-28 00:00:00', 'Ăn tối', '2026-04-28 22:46:32'),
+(5, 1, 11, 500000.00, '2026-04-28 00:00:00', 'Anh Trân web bán hàng', '2026-04-28 22:46:47'),
+(8, 1, 9, 30000.00, '2026-04-27 00:00:00', 'Ăn trưa một mình', '2026-04-28 23:48:29'),
+(9, 1, 8, 3000000.00, '2026-04-06 00:00:00', 'Lương SSMC tháng 3', '2026-04-28 23:49:09'),
+(10, 1, 9, 6000.00, '2026-04-27 00:00:00', 'Mua trứng', '2026-04-28 23:49:40'),
+(11, 1, 10, 15000.00, '2026-04-19 00:00:00', 'cà phê', '2026-04-28 23:50:17'),
+(34, 1, 15, 1500000.00, '2026-04-10 00:00:00', 'Nhận tiền code dạo giao diện Web', '2026-04-29 08:00:00'),
+(35, 1, 11, 200000.00, '2026-04-15 00:00:00', 'Tool dự báo tài chính', '2026-04-29 08:00:00'),
+(36, 1, 13, 120000.00, '2026-04-12 00:00:00', 'Mua giáo trình Lập trình Web', '2026-04-29 08:00:00'),
+(37, 1, 10, 35000.00, '2026-04-14 00:00:00', 'Cà phê Highland làm báo cáo Lab', '2026-04-29 08:00:00'),
+(38, 1, 13, 40000.00, '2026-04-18 00:00:00', 'In tài liệu môn Mạng máy tính', '2026-04-29 08:00:00'),
+(39, 1, 9, 45000.00, '2026-04-20 00:00:00', 'Cơm trưa căn tin', '2026-04-29 08:00:00'),
+(40, 1, 9, 50000.00, '2026-04-22 00:00:00', 'Bún bò xào', '2026-04-29 08:00:00'),
+(41, 1, 14, 450000.00, '2026-04-25 00:00:00', 'Mua áo thun local brand', '2026-04-29 08:00:00'),
+(42, 1, 16, 80000.00, '2026-04-26 00:00:00', 'Mua thuốc cảm', '2026-04-29 08:00:00'),
+(43, 1, 10, 60000.00, '2026-04-29 00:00:00', 'Trà sữa Phúc Long', '2026-04-29 08:00:00'),
+(44, 1, 10, 600000.00, '2026-04-29 00:00:00', 'Bao công ty', '2026-04-29 09:04:30'),
+(46, 1, 9, 30000.00, '2026-05-04 00:00:00', 'Ăn tối', '2026-05-05 00:15:30'),
+(47, 1, 21, 10000000.00, '2026-04-23 00:00:00', 'Bị lừa', '2026-05-05 01:12:56');
 
 -- --------------------------------------------------------
 
@@ -226,7 +244,8 @@ ALTER TABLE `budgets`
 --
 ALTER TABLE `categories`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `user_id` (`user_id`);
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `fk_category_parent` (`parent_id`);
 
 --
 -- Indexes for table `transactions`
@@ -265,7 +284,7 @@ ALTER TABLE `budgets`
 -- AUTO_INCREMENT for table `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
 
 --
 -- AUTO_INCREMENT for table `transactions`
@@ -300,7 +319,8 @@ ALTER TABLE `budgets`
 -- Constraints for table `categories`
 --
 ALTER TABLE `categories`
-  ADD CONSTRAINT `categories_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `categories_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_category_parent` FOREIGN KEY (`parent_id`) REFERENCES `categories` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `transactions`

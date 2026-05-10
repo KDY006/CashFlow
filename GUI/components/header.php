@@ -1,24 +1,44 @@
 <?php
 // Tệp: GUI/components/header.php
 
-// 1. CẤU HÌNH MENU DÙNG CHUNG CHO CẢ DESKTOP VÀ MOBILE
+// 1. CẤU HÌNH MENU DÙNG CHUNG
 $menuItems = [
     ['url' => '../analytics/dashboard.php', 'icon' => 'bi-house-door-fill', 'title' => 'Tổng quan', 'keyword' => 'dashboard'],
-    ['url' => '../calendar/index.php', 'icon' => 'bi-calendar3', 'title' => 'Lịch tháng', 'keyword' => 'calendar'],
+        ['url' => '../calendar/index.php', 'icon' => 'bi-calendar3', 'title' => 'Lịch tháng', 'keyword' => 'calendar'],
     ['url' => '../transactions/index.php', 'icon' => 'bi-cash-stack', 'title' => 'Giao dịch', 'keyword' => 'transactions'],
     ['url' => '../budgets/index.php', 'icon' => 'bi-bullseye', 'title' => 'Danh mục và Ngân sách', 'keyword' => 'budgets'],
     ['url' => '../ai/advisor.php', 'icon' => 'bi-robot', 'title' => 'Cố vấn AI', 'keyword' => 'ai'],
 ];
 $currentUri = $_SERVER['REQUEST_URI'];
+
+// 2. LẤY THÔNG TIN AVATAR MỚI NHẤT TỪ DATABASE
+$headerUserId = $_SESSION['user_id'] ?? null;
+$headerUserName = $_SESSION['user_name'] ?? 'Khách';
+// Avatar mặc định nếu chưa có ảnh
+$headerAvatar = 'https://ui-avatars.com/api/?name=' . urlencode($headerUserName) . '&background=198754&color=fff';
+
+if ($headerUserId) {
+    // Khởi tạo DAL để lấy dữ liệu mới nhất (đảm bảo đồng bộ ngay lập tức)
+    $headerUserDAL = new UserDAL();
+    $headerUser = $headerUserDAL->getUserById($headerUserId);
+    
+    if ($headerUser) {
+        $headerUserName = $headerUser['full_name'];
+        if (!empty($headerUser['avatar_url'])) {
+            // Đường dẫn tương đối: Lùi 2 cấp (../../) để từ file trang hiện tại về thư mục gốc chứa assets
+            $headerAvatar = '../../' . ltrim($headerUser['avatar_url'], '/');
+        }
+    }
+}
 ?>
 
 <style>
     /* CSS CHO NÚT THÊM GIAO DỊCH NỔI Ở GÓC DƯỚI (MOBILE) */
     .fab-mobile {
         position: fixed;
-        bottom: 85px; /* Nằm cách đáy 85px (tức là nổi ngay trên thanh Bottom Nav) */
-        right: 20px;  /* Cách lề phải 20px */
-        z-index: 1050; /* Đảm bảo luôn nằm trên cùng, không bị che khuất */
+        bottom: 85px; 
+        right: 20px;  
+        z-index: 1050; 
     }
     .fab-mobile .btn-float {
         width: 56px; 
@@ -27,19 +47,28 @@ $currentUri = $_SERVER['REQUEST_URI'];
         display: flex; 
         align-items: center; 
         justify-content: center;
-        box-shadow: 0 4px 12px rgba(25, 135, 84, 0.4); /* Đổ bóng màu xanh lá */
+        box-shadow: 0 4px 12px rgba(25, 135, 84, 0.4);
         transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
     .fab-mobile .btn-float:active {
-        transform: scale(0.9); /* Hiệu ứng lún xuống khi bấm */
+        transform: scale(0.9);
         box-shadow: 0 2px 6px rgba(25, 135, 84, 0.4);
     }
     
-    /* CSS Bổ sung cho thanh Bottom Nav nếu thiếu */
     .bottom-nav {
         display: flex;
         justify-content: space-around;
         align-items: center;
+    }
+
+    /* CSS ĐẢM BẢO AVATAR HEADER LUÔN TRÒN VÀ KHÔNG BỊ MÉO */
+    .header-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1px solid #dee2e6;
+        background-color: #fff;
     }
 </style>
 
@@ -66,15 +95,23 @@ $currentUri = $_SERVER['REQUEST_URI'];
             </a>
 
             <div class="dropdown">
-                <a href="#" class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle p-1 rounded-pill border" id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: #f0f2f5;">
-                    <img src="https://ui-avatars.com/api/?name=<?= isset($_SESSION['user_name']) ? urlencode($_SESSION['user_name']) : 'User' ?>&background=198754&color=fff" alt="Avatar" width="32" height="32" class="rounded-circle me-2">
-                    <span class="fw-semibold me-2 d-none d-sm-inline"><?= isset($_SESSION['user_name']) ? htmlspecialchars($_SESSION['user_name']) : 'Khách' ?></span>
+                <a href="#" class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle p-1 rounded-pill border" id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: #f8f9fa;">
+                    <img src="<?= htmlspecialchars($headerAvatar) ?>" alt="Avatar" class="header-avatar me-2">
+                    <span class="fw-semibold me-2 d-none d-sm-inline"><?= htmlspecialchars($headerUserName) ?></span>
                 </a>
-                <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" aria-labelledby="dropdownUser">
-                    <li><a class="dropdown-item py-2" href="#"><i class="bi bi-person-circle me-2"></i>Hồ sơ cá nhân</a></li>
-                    <li><a class="dropdown-item py-2" href="#"><i class="bi bi-shield-lock me-2"></i>Đổi mật khẩu</a></li>
+                
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 rounded-3" aria-labelledby="dropdownUser">
+                    <li>
+                        <a class="dropdown-item py-2 fw-semibold text-secondary" href="../profile/index.php">
+                            <i class="bi bi-person-circle me-2 text-primary"></i>Hồ sơ cá nhân
+                        </a>
+                    </li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item text-danger py-2" href="../../controllers/AuthController.php?action=logout"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
+                    <li>
+                        <a class="dropdown-item text-danger py-2 fw-semibold" href="../../controllers/AuthController.php?action=logout">
+                            <i class="bi bi-box-arrow-right me-2"></i>Đăng xuất
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>

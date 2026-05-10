@@ -64,8 +64,8 @@ class AiInsightDTO {
     }
 
     public function setType($type) {
-        // Chỉ chấp nhận 3 giá trị ENUM đã định nghĩa trong DB
-        $validTypes = ['anomaly', 'forecast', 'advice'];
+        // Cập nhật để nhận thêm 'summary' và 'warning'
+        $validTypes = ['anomaly', 'forecast', 'advice', 'summary', 'warning'];
         if (in_array($type, $validTypes)) {
             $this->type = $type;
         }

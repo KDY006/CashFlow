@@ -30,8 +30,8 @@ require_once __DIR__ . '/../../../autoload.php';
         .date-num { font-weight: 800; font-size: 1.1rem; color: #343a40; }
         .today .date-num { color: #0d6efd; text-decoration: underline; }
         
-        /* Icon tờ giấy note */
-        .note-indicator { position: absolute; top: 8px; right: 8px; color: #ffc107; font-size: 1.1rem; }
+        /* Icon tờ giấy note & Ghim */
+        .note-indicator { position: absolute; top: 8px; right: 8px; font-size: 1.1rem; }
         
         .badge-money { font-size: 0.75rem; font-weight: bold; display: block; text-align: right; margin-top: 2px;}
         .badge-income { color: #198754; }
@@ -45,13 +45,14 @@ require_once __DIR__ . '/../../../autoload.php';
 
     <main class="container py-4 mb-5">
         <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1055">
-            <div id="liveToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div id="liveToast" class="toast align-items-center text-bg-success border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
                 <div class="d-flex">
                     <div class="toast-body fw-semibold" id="toastMessage">Thông báo!</div>
                     <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
                 </div>
             </div>
         </div>
+        
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
             <h3 class="fw-bold text-dark mb-0"><i class="bi bi-calendar3 me-2 text-primary"></i>Lịch Tài Chính</h3>
             <div class="d-flex align-items-center bg-white p-1 rounded-pill shadow-sm border">
@@ -115,15 +116,27 @@ require_once __DIR__ . '/../../../autoload.php';
     <div class="modal fade" id="noteModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <form id="noteForm" class="modal-content border-0 shadow rounded-4">
-                <div class="modal-header border-0">
-                    <h5 class="modal-title fw-bold">Ghi chú cho ngày <span id="noteDateLabel"></span></h5>
+                <div class="modal-header border-0 pb-2">
+                    <h5 class="modal-title fw-bold">Ghi chú ngày <span id="noteDateLabel" class="text-primary"></span></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
-                    <textarea name="content" id="noteTextarea" class="form-control border-0 bg-light" rows="5" placeholder="Nhập nội dung ghi chú... (Để trống để xóa)"></textarea>
+                <div class="modal-body pt-0">
+                    <div class="mb-3">
+                        <textarea name="content" id="noteTextarea" class="form-control border-0 bg-light rounded-4 p-3" rows="4" placeholder="Nhập nội dung ghi chú... (Để trống để xóa)"></textarea>
+                    </div>
+                    
+                    <div class="mb-2 bg-light p-3 rounded-4 border">
+                        <label class="form-label fw-bold small text-muted mb-1"><i class="bi bi-pin-angle-fill me-1"></i>TÙY CHỌN GHIM</label>
+                        <select name="pin_type" id="notePinType" class="form-select border-0 shadow-none fw-semibold" onchange="updatePinHint()">
+                            <option value="none">Chỉ lưu cho ngày này</option>
+                            <option value="weekly">Ghim lặp lại hàng tuần</option>
+                            <option value="monthly">Ghim lặp lại hàng tháng</option>
+                        </select>
+                        <div id="pinHint" class="form-text small mt-2 text-primary fst-italic">Ghi chú sẽ xuất hiện một lần duy nhất.</div>
+                    </div>
                 </div>
-                <div class="modal-footer border-0">
-                    <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold py-2">Cập nhật ghi chú</button>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold py-2 shadow-sm">Lưu ghi chú</button>
                 </div>
             </form>
         </div>
@@ -144,7 +157,6 @@ require_once __DIR__ . '/../../../autoload.php';
             const [y, m] = currentMonthStr.split('-');
             document.getElementById('currentMonthDisplay').innerText = `Tháng ${m} / ${y}`;
 
-            // Tải song song Giao dịch và Ghi chú
             const [resCal, resNotes] = await Promise.all([
                 fetch(`../../controllers/AnalyticsController.php?action=get_calendar&month=${currentMonthStr}`),
                 fetch(`../../controllers/DailyNoteController.php?action=get_all_month&month=${currentMonthStr}`)
@@ -156,13 +168,15 @@ require_once __DIR__ . '/../../../autoload.php';
             if (resultCal.status) calendarData = resultCal.data;
             if (resultNotes.status) {
                 dailyNotes = {};
-                resultNotes.data.forEach(n => dailyNotes[n.note_date] = n.content);
+                // Lưu thành dạng Object để phân biệt note ghim và note thường
+                resultNotes.data.forEach(n => {
+                    dailyNotes[n.note_date] = { content: n.content, pin_type: n.pin_type, is_inherited: n.is_inherited };
+                });
             }
 
             renderCalendar(parseInt(y), parseInt(m));
             updateSummary();
             
-            // Tự động chọn ngày hôm nay nếu mới load
             const today = new Date().toISOString().split('T')[0];
             if (!selectedDate || !selectedDate.startsWith(currentMonthStr)) {
                 selectDay(calendarData[today] ? today : `${currentMonthStr}-01`);
@@ -183,13 +197,23 @@ require_once __DIR__ . '/../../../autoload.php';
             for (let d = 1; d <= daysInMonth; d++) {
                 const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                 const data = calendarData[dateStr] || { income: 0, expense: 0 };
-                const hasNote = dailyNotes[dateStr];
+                const noteObj = dailyNotes[dateStr];
                 
+                let iconHtml = '';
+                if (noteObj) {
+                    // Nếu là ghim thì hiện màu đỏ, nếu note thường hiện vàng
+                    if (noteObj.pin_type !== 'none') {
+                        iconHtml = '<i class="bi bi-pin-angle-fill note-indicator text-danger fs-5"></i>';
+                    } else {
+                        iconHtml = '<i class="bi bi-sticky-fill note-indicator text-warning fs-5"></i>';
+                    }
+                }
+
                 html += `
                 <div class="calendar-cell ${dateStr === todayStr ? 'today' : ''} ${dateStr === selectedDate ? 'active' : ''}" 
                      id="cell_${dateStr}" onclick="selectDay('${dateStr}')">
                     <span class="date-num">${d}</span>
-                    ${hasNote ? '<i class="bi bi-sticky-fill note-indicator"></i>' : ''}
+                    ${iconHtml}
                     <div class="mt-auto">
                         ${data.income > 0 ? `<span class="badge-money badge-income">+${(data.income/1000).toFixed(0)}K</span>` : ''}
                         ${data.expense > 0 ? `<span class="badge-money badge-expense">-${(data.expense/1000).toFixed(0)}K</span>` : ''}
@@ -204,15 +228,56 @@ require_once __DIR__ . '/../../../autoload.php';
             selectedDate = dateStr;
             document.getElementById('cell_'+dateStr)?.classList.add('active');
 
-            // Hiển thị Ghi chú
             const noteArea = document.getElementById('dailyNoteContent');
-            if (dailyNotes[dateStr]) {
-                noteArea.innerHTML = `<div class="p-2 note-card small fw-semibold text-dark">${dailyNotes[dateStr]}</div>`;
+            const noteObj = dailyNotes[dateStr];
+
+            if (noteObj) {
+                let badge = '';
+                if (noteObj.is_inherited) {
+                    badge = `<span class="badge bg-secondary ms-2 small"><i class="bi bi-arrow-repeat"></i> Kế thừa</span>`;
+                } else if (noteObj.pin_type !== 'none') {
+                    badge = `<span class="badge bg-danger ms-2 small"><i class="bi bi-pin-angle-fill"></i> Đang ghim</span>`;
+                }
+                
+                noteArea.innerHTML = `<div class="p-3 note-card fw-semibold text-dark shadow-sm position-relative">${noteObj.content} <div class="position-absolute top-0 end-0 mt-2 me-2">${badge}</div></div>`;
             } else {
-                noteArea.innerHTML = `<p class="text-muted fst-italic small mb-0">Không có ghi chú.</p>`;
+                noteArea.innerHTML = `<p class="text-muted fst-italic small mb-0 text-center py-2"><i class="bi bi-journal-x me-1"></i>Không có ghi chú.</p>`;
             }
 
             fetchDailyTransactions(dateStr);
+        }
+
+        function updatePinHint() {
+            const type = document.getElementById('notePinType').value;
+            const hint = document.getElementById('pinHint');
+            if(!selectedDate) return;
+            
+            const d = new Date(selectedDate);
+            const days = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+
+            if (type === 'none') {
+                hint.innerHTML = '<i class="bi bi-info-circle me-1"></i>Ghi chú chỉ hiển thị 1 lần vào ngày này.';
+            } else if (type === 'weekly') {
+                hint.innerHTML = `<i class="bi bi-arrow-repeat me-1"></i>Ghi chú sẽ tự lặp lại vào mọi <strong>${days[d.getDay()]}</strong> ở các tháng sau.`;
+            } else if (type === 'monthly') {
+                hint.innerHTML = `<i class="bi bi-arrow-repeat me-1"></i>Ghi chú sẽ tự lặp lại vào <strong>ngày ${d.getDate()}</strong> của mọi tháng sau.`;
+            }
+        }
+
+        function openNoteModal() {
+            document.getElementById('noteDateLabel').innerText = selectedDate.split('-').reverse().join('/');
+            
+            const noteObj = dailyNotes[selectedDate];
+            if (noteObj) {
+                document.getElementById('noteTextarea').value = noteObj.content;
+                document.getElementById('notePinType').value = noteObj.is_inherited ? 'none' : noteObj.pin_type;
+            } else {
+                document.getElementById('noteTextarea').value = '';
+                document.getElementById('notePinType').value = 'none';
+            }
+            
+            updatePinHint();
+            noteModal.show();
         }
 
         async function fetchDailyTransactions(dateStr) {
@@ -221,32 +286,30 @@ require_once __DIR__ . '/../../../autoload.php';
             const container = document.getElementById('dailyDetailList');
             
             if (result.status && result.data.length > 0) {
-                let html = `<h6 class="fw-bold mb-3 mt-2">Giao dịch ngày ${dateStr.split('-').reverse().join('/')}</h6>`;
+                let html = `<h6 class="fw-bold mb-3 mt-4 text-secondary">Giao dịch ngày ${dateStr.split('-').reverse().join('/')}</h6>`;
                 result.data.forEach(t => {
                     const isInc = t.category_type === 'income';
                     const amountStr = window.formatNumberInput(t.amount.split('.')[0]);
-                    const words = window.readVietnameseNumber ? window.readVietnameseNumber(t.amount.split('.')[0]) : '';
                     
                     html += `
-                    <div class="card border-0 shadow-sm rounded-4 mb-2 p-3">
+                    <div class="card border-0 shadow-sm rounded-4 mb-2 p-3 transition-hover">
                         <div class="d-flex justify-content-between align-items-center">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="rounded-circle bg-light p-2 text-primary"><i class="bi bi-tag-fill"></i></div>
+                                <div class="rounded-circle bg-light p-2 ${isInc ? 'text-success' : 'text-danger'}"><i class="bi ${isInc ? 'bi-arrow-down-left' : 'bi-arrow-up-right'}"></i></div>
                                 <div>
                                     <div class="fw-bold text-dark">${t.category_name}</div>
-                                    <div class="small text-muted">${t.note || '...'}</div>
+                                    <div class="small text-muted">${t.note || 'Không có ghi chú'}</div>
                                 </div>
                             </div>
                             <div class="text-end">
                                 <div class="fw-bold ${isInc ? 'text-success' : 'text-danger'}">${isInc ? '+' : '-'}${amountStr} đ</div>
-                                <div class="text-muted fst-italic" style="font-size:0.65rem">${words}</div>
                             </div>
                         </div>
                     </div>`;
                 });
                 container.innerHTML = html;
             } else {
-                container.innerHTML = '<div class="text-center py-4 text-muted small">Không có giao dịch ngày này.</div>';
+                container.innerHTML = '<div class="text-center py-5 text-muted small"><i class="bi bi-inbox fs-2 mb-2 d-block opacity-25"></i>Không có giao dịch ngày này.</div>';
             }
         }
 
@@ -259,22 +322,14 @@ require_once __DIR__ . '/../../../autoload.php';
             document.getElementById('monthNet').innerText = (net >= 0 ? '+' : '-') + window.formatNumberInput(Math.abs(net).toString()) + ' đ';
         }
 
-        function openNoteModal() {
-            document.getElementById('noteDateLabel').innerText = selectedDate;
-            document.getElementById('noteTextarea').value = dailyNotes[selectedDate] || '';
-            noteModal.show();
-        }
-
-        // Thêm biến khởi tạo Toast ở đầu phần script
         const toastEl = document.getElementById('liveToast');
         const toast = new bootstrap.Toast(toastEl);
         function showToast(message, isSuccess = true) {
             document.getElementById('toastMessage').innerText = message;
-            toastEl.className = isSuccess ? 'toast align-items-center text-bg-success border-0' : 'toast align-items-center text-bg-danger border-0';
+            toastEl.className = isSuccess ? 'toast align-items-center text-bg-success border-0 shadow-lg' : 'toast align-items-center text-bg-danger border-0 shadow-lg';
             toast.show();
         }
 
-        // Cập nhật sự kiện submit form ghi chú
         document.getElementById('noteForm').onsubmit = async (e) => {
             e.preventDefault();
             const content = document.getElementById('noteTextarea').value;
@@ -282,16 +337,17 @@ require_once __DIR__ . '/../../../autoload.php';
             fd.append('action', 'save');
             fd.append('date', selectedDate);
             fd.append('content', content);
+            fd.append('pin_type', document.getElementById('notePinType').value);
 
             try {
                 const res = await fetch('../../controllers/DailyNoteController.php', { method: 'POST', body: fd });
                 const result = await res.json();
                 
-                showToast(result.message, result.status); // Báo lên màn hình
+                showToast(result.message, result.status);
                 
                 if (result.status) {
                     noteModal.hide();
-                    loadCalendarData(); // Tải lại lịch để hiện/ẩn icon tờ giấy màu vàng
+                    loadCalendarData(); 
                 }
             } catch (error) {
                 showToast("Lỗi kết nối máy chủ!", false);

@@ -66,10 +66,11 @@ class UserDAL {
         return $stmt->execute();
     }
 
-    public function updateProfile($id, $fullName) {
-        $sql = "UPDATE users SET full_name = :full_name WHERE id = :id";
+    public function updateProfile($id, $fullName, $avatarUrl = null) {
+        $sql = "UPDATE users SET full_name = :full_name, avatar_url = :avatar_url WHERE id = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':full_name', $fullName, PDO::PARAM_STR);
+        $stmt->bindParam(':avatar_url', $avatarUrl, PDO::PARAM_STR);
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
         return $stmt->execute();
     }
@@ -88,6 +89,14 @@ class UserDAL {
         $stmt->bindParam(':password_hash', $passwordHash, PDO::PARAM_STR);
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
         return $stmt->execute();
+    }
+
+    public function updateLastAiConsult($userId) {
+        // Dùng giờ của PHP để đồng bộ tuyệt đối với logic tính toán đếm ngược
+        $now = date('Y-m-d H:i:s');
+        $sql = "UPDATE users SET last_ai_consult_at = :now WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([':now' => $now, ':id' => $userId]);
     }
 }
 ?>

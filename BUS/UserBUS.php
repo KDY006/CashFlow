@@ -99,9 +99,12 @@ class UserBUS {
         return ["status" => false, "message" => "Không thể cập nhật mật khẩu lúc này."];
     }
 
-    public function updateProfile($id, $fullName) {
+    public function updateProfile($id, $fullName, $avatarUrl = null) {
         if (empty(trim($fullName))) return ["status" => false, "message" => "Họ tên không được để trống!"];
-        $result = $this->userDAL->updateProfile($id, $fullName);
+        
+        // Gọi xuống DAL với 3 tham số
+        $result = $this->userDAL->updateProfile($id, $fullName, $avatarUrl);
+        
         if ($result) return ["status" => true, "message" => "Cập nhật thông tin thành công!"];
         return ["status" => false, "message" => "Không thể cập nhật lúc này."];
     }

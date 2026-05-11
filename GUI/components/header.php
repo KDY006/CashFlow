@@ -18,19 +18,58 @@ $headerUserName = $_SESSION['user_name'] ?? 'Khách';
 $headerAvatar = 'https://ui-avatars.com/api/?name=' . urlencode($headerUserName) . '&background=198754&color=fff';
 
 if ($headerUserId) {
-    // Khởi tạo DAL để lấy dữ liệu mới nhất (đảm bảo đồng bộ ngay lập tức)
-    $headerUserDAL = new UserDAL();
-    $headerUser = $headerUserDAL->getUserById($headerUserId);
+    // Khởi tạo BUS để lấy dữ liệu mới nhất (đảm bảo đồng bộ ngay lập tức và tuân thủ 3 tầng)
+    $headerUserBUS = new UserBUS();
+    $headerUser = $headerUserBUS->getUserById($headerUserId);
     
     if ($headerUser) {
         $headerUserName = $headerUser['full_name'];
         if (!empty($headerUser['avatar_url'])) {
             // Đường dẫn tương đối: Lùi 2 cấp (../../) để từ file trang hiện tại về thư mục gốc chứa assets
-            $headerAvatar = '../../' . ltrim($headerUser['avatar_url'], '/');
+            $headerAvatar = '../../assets/images/avatars/' . ltrim($headerUser['avatar_url'], '/');
         }
     }
 }
 ?>
+
+<?php
+require_once __DIR__ . '/../../helpers/CsrfHelper.php';
+$csrfToken = CsrfHelper::generateToken();
+?>
+
+<meta name="csrf-token" content="<?= $csrfToken ?>">
+
+<script>
+    // FETCH INTERCEPTOR: Tự động đính kèm CSRF Token vào tất cả yêu cầu POST (AJAX)
+    (function() {
+        const originalFetch = window.fetch;
+        window.fetch = async function(resource, config) {
+            if (config && config.method && config.method.toUpperCase() === 'POST') {
+                const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                
+                // Nếu gửi bằng FormData
+                if (config.body instanceof FormData) {
+                    if (!config.body.has('csrf_token')) {
+                        config.body.append('csrf_token', token);
+                    }
+                } 
+                // Nếu gửi bằng chuỗi hoặc JSON
+                else if (typeof config.body === 'string') {
+                    try {
+                        let data = JSON.parse(config.body);
+                        data.csrf_token = token;
+                        config.body = JSON.stringify(data);
+                    } catch (e) {
+                        if (config.body.indexOf('=') !== -1) {
+                            config.body += (config.body.length > 0 ? '&' : '') + 'csrf_token=' + encodeURIComponent(token);
+                        }
+                    }
+                }
+            }
+            return originalFetch(resource, config);
+        };
+    })();
+</script>
 
 <style>
     /* CSS CHO NÚT THÊM GIAO DỊCH NỔI Ở GÓC DƯỚI (MOBILE) */

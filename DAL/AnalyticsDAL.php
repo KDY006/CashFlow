@@ -270,8 +270,15 @@ class AnalyticsDAL
 
     public function getAvailableYears(int $user_id): array
     {
-        $current = (int) date('Y');
-        return [$current, $current - 1, $current - 2];
+        $sql = "SELECT DISTINCT YEAR(transaction_date) as year FROM transactions WHERE user_id = :user_id ORDER BY year DESC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':user_id' => $user_id]);
+        $years = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        
+        if (empty($years)) {
+            return [(int) date('Y')];
+        }
+        return array_map('intval', $years);
     }
 
     // ==========================================
@@ -434,13 +441,29 @@ class AnalyticsDAL
         $results = [];
         foreach ($periods as $p) {
             $params = [':uid' => $userId];
-            // $p['condition'] sẽ là chuỗi SQL do BUS tạo ra (VD: YEAR(date) = 2026 AND MONTH(date) = 5)
+            $sqlCondition = "";
+            
+            if ($p['type'] === 'year') {
+                $sqlCondition = "YEAR(t.transaction_date) = :year";
+                $params[':year'] = $p['year'];
+            } elseif ($p['type'] === 'month') {
+                $sqlCondition = "YEAR(t.transaction_date) = :year AND MONTH(t.transaction_date) = :month";
+                $params[':year'] = $p['year'];
+                $params[':month'] = $p['month'];
+            } elseif ($p['type'] === 'week') {
+                $sqlCondition = "YEAR(t.transaction_date) = :year AND MONTH(t.transaction_date) = :month AND CEIL((DAY(t.transaction_date) + WEEKDAY(:firstDayStr)) / 7) = :week";
+                $params[':year'] = $p['year'];
+                $params[':month'] = $p['month'];
+                $params[':week'] = $p['week'];
+                $params[':firstDayStr'] = $p['firstDayStr'];
+            }
+
             $sql = "SELECT 
                         SUM(CASE WHEN c.type = 'income' THEN t.amount ELSE 0 END) AS income,
                         SUM(CASE WHEN c.type = 'expense' THEN t.amount ELSE 0 END) AS expense
                     FROM transactions t
                     JOIN categories c ON t.category_id = c.id
-                    WHERE t.user_id = :uid AND " . $p['sql'];
+                    WHERE t.user_id = :uid AND " . $sqlCondition;
             
             $stmt = $this->db->prepare($sql);
             $stmt->execute($params);

@@ -3,10 +3,6 @@
  * Tệp: BUS/AnalyticsBUS.php
  */
 
-require_once __DIR__ . '/../DAL/AnalyticsDAL.php';
-require_once __DIR__ . '/../DAL/BudgetDAL.php';
-require_once __DIR__ . '/../helpers/FormatHelper.php';
-
 class AnalyticsBUS
 {
     private AnalyticsDAL $dal;
@@ -238,12 +234,12 @@ class AnalyticsBUS
 
     private function getBudgetHealth(int $userId, string $monthStr): array
     {
-        $budgetDal = new BudgetDAL();
+        $budgetBus = new BudgetBUS();
         $parts = explode('-', $monthStr);
         $year = (int)$parts[0];
         $month = (int)$parts[1];
         
-        $budgets = $budgetDal->getBudgetsByMonth($userId, $month, $year);
+        $budgets = $budgetBus->getBudgetsByMonth($userId, $month, $year);
         $healthData = [];
         
         foreach ($budgets as $b) {
@@ -287,7 +283,7 @@ class AnalyticsBUS
                 $amt = (float)$row['total'];
                 $pct = $totalAmount > 0 ? round(($amt / $totalAmount) * 100, 1) : 0;
                 $result[] = [
-                    'name'       => $row['category_name'],
+                    'name'       => htmlspecialchars($row['category_name'] ?? '', ENT_QUOTES, 'UTF-8'),
                     'amount'     => $amt,
                     'amount_fmt' => FormatHelper::formatCurrency($amt),
                     'percent'    => $pct
@@ -309,13 +305,13 @@ class AnalyticsBUS
             $b_month = (int)$parts[1];
         }
         
-        $budgetDal = new BudgetDAL();
-        $budgetsRaw = $budgetDal->getBudgetsByMonth($userId, $b_month, $b_year);
+        $budgetBus = new BudgetBUS();
+        $budgetsRaw = $budgetBus->getBudgetsByMonth($userId, $b_month, $b_year);
         $budgets = [];
         
         foreach ($budgetsRaw as $b) {
             $budgets[] = [
-                'name'       => $b->getCategoryName(),
+                'name'       => htmlspecialchars($b->getCategoryName() ?? '', ENT_QUOTES, 'UTF-8'),
                 'limit'      => $b->getAmountLimit(),
                 'spent'      => $b->getTotalSpent(),
                 'percent'    => $b->getProgressPercentage(),
@@ -330,7 +326,7 @@ class AnalyticsBUS
             $currentYear = (int)$filterVal;
             for ($i = -5; $i <= 6; $i++) {
                 $y = $currentYear + $i;
-                $historicalPeriods[] = ['label' => "Năm $y", 'sql' => "YEAR(t.transaction_date) = $y"];
+                $historicalPeriods[] = ['label' => "Năm $y", 'type' => 'year', 'year' => $y];
             }
         } elseif ($filterType === 'week') {
             $parts = explode('-', $filterVal);
@@ -376,7 +372,11 @@ class AnalyticsBUS
                 $firstDayStr = sprintf('%04d-%02d-01', $y, $m);
                 $historicalPeriods[] = [
                     'label' => "T$w/Th$padM",
-                    'sql'   => "YEAR(t.transaction_date) = $y AND MONTH(t.transaction_date) = $m AND CEIL((DAY(t.transaction_date) + WEEKDAY('$firstDayStr')) / 7) = $w"
+                    'type'  => 'week',
+                    'year'  => $y,
+                    'month' => $m,
+                    'week'  => $w,
+                    'firstDayStr' => $firstDayStr
                 ];
             }
         } else {
@@ -391,7 +391,9 @@ class AnalyticsBUS
                 $padM = str_pad($m, 2, '0', STR_PAD_LEFT);
                 $historicalPeriods[] = [
                     'label' => "Th$padM/$y", 
-                    'sql'   => "YEAR(t.transaction_date) = $y AND MONTH(t.transaction_date) = $m"
+                    'type'  => 'month',
+                    'year'  => $y,
+                    'month' => $m
                 ];
             }
         }

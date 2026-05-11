@@ -1,7 +1,9 @@
 <?php
 // Tệp: GUI/controllers/BudgetController.php
 
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once __DIR__ . '/../../autoload.php';
 
 header('Content-Type: application/json; charset=utf-8');
@@ -15,20 +17,19 @@ $budgetBUS = new BudgetBUS();
 $userId = $_SESSION['user_id'];
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 
+// Xác minh CSRF cho các action thay đổi dữ liệu
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    CsrfHelper::verify(true);
+}
+
 // Lấy danh sách hũ ngân sách của một tháng cụ thể
+// Logic auto-clone đã được chuyển vào BudgetBUS::getBudgetsOrClone
 if ($action === 'get_by_month') {
-    $month = $_GET['month'] ?? date('n');
-    $year = $_GET['year'] ?? date('Y');
-    
-    $budgets = $budgetBUS->getBudgetsByMonth($userId, $month, $year);
-    
-    // LOGIC NÂNG CẤP: Tự động duy trì hũ ngân sách sang tháng mới
-    if (empty($budgets)) {
-        $budgetBUS->clonePreviousMonthBudgets($userId, $month, $year);
-        // Tải lại dữ liệu sau khi đã tự động sao chép
-        $budgets = $budgetBUS->getBudgetsByMonth($userId, $month, $year);
-    }
-    
+    $month = (int) ($_GET['month'] ?? date('n'));
+    $year  = (int) ($_GET['year']  ?? date('Y'));
+
+    $budgets = $budgetBUS->getBudgetsOrClone($userId, $month, $year);
+
     $data = [];
     foreach ($budgets as $b) {
         $data[] = [

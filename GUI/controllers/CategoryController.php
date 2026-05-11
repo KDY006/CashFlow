@@ -1,7 +1,9 @@
 <?php
 // Tệp: GUI/controllers/CategoryController.php
 
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once __DIR__ . '/../../autoload.php';
 
 header('Content-Type: application/json; charset=utf-8');
@@ -15,6 +17,11 @@ $categoryBUS = new CategoryBUS();
 $userId = $_SESSION['user_id'];
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 
+// Xác minh CSRF cho các action thay đổi dữ liệu
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    CsrfHelper::verify(true);
+}
+
 // TRẢ VỀ CẤU TRÚC CÂY DANH MỤC
 if ($action === 'get_tree') {
     $tree = $categoryBUS->getCategoryTree($userId);
@@ -24,9 +31,9 @@ if ($action === 'get_tree') {
 
 // THÊM DANH MỤC (Có parent_id)
 if ($action === 'add') {
-    $name = $_POST['name'] ?? '';
-    $type = $_POST['type'] ?? 'expense';
-    $parentId = !empty($_POST['parent_id']) ? $_POST['parent_id'] : null;
+    $name     = trim($_POST['name'] ?? '');
+    $type     = trim($_POST['type'] ?? 'expense');
+    $parentId = !empty($_POST['parent_id']) ? (int) $_POST['parent_id'] : null;
 
     $result = $categoryBUS->addCategory($userId, $name, $type, $parentId);
     echo json_encode($result);
@@ -35,7 +42,7 @@ if ($action === 'add') {
 
 // XÓA DANH MỤC
 if ($action === 'delete') {
-    $result = $categoryBUS->deleteCategory($_POST['id'], $userId);
+    $result = $categoryBUS->deleteCategory((int) ($_POST['id'] ?? 0), $userId);
     echo json_encode($result);
     exit();
 }

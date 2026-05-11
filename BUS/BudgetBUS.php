@@ -12,6 +12,21 @@ class BudgetBUS {
         return $this->budgetDAL->getBudgetsByMonth($userId, $month, $year);
     }
 
+    /**
+     * Lấy ngân sách theo tháng. Nếu chưa có, tự động sao chép từ tháng trước.
+     * Business logic này được tập trung tại BUS, không để ở Controller.
+     */
+    public function getBudgetsOrClone($userId, int $month, int $year): array {
+        $budgets = $this->budgetDAL->getBudgetsByMonth($userId, $month, $year);
+
+        if (empty($budgets)) {
+            $this->clonePreviousMonthBudgets($userId, $month, $year);
+            $budgets = $this->budgetDAL->getBudgetsByMonth($userId, $month, $year);
+        }
+
+        return $budgets;
+    }
+
     public function addBudget($userId, $categoryId, $amountLimit, $month, $year) {
         if (empty($categoryId)) return ["status" => false, "message" => "Vui lòng chọn danh mục."];
         if (!is_numeric($amountLimit) || $amountLimit <= 0) return ["status" => false, "message" => "Số tiền ngân sách phải lớn hơn 0."];

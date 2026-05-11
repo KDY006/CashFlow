@@ -1,16 +1,20 @@
 <?php
-require_once __DIR__ . '/../DAL/AiInsightDAL.php';
-require_once __DIR__ . '/../DAL/AnalyticsDAL.php';
-require_once __DIR__ . '/../DAL/UserDAL.php';
-
 class AiAdvisorBUS
 {
+    private const MAX_DAILY_CONSULTS = 3;
+    private const COOLDOWN_SECONDS = 86400;
+    private const AI_TIMEOUT = 60;
+
     private AiInsightDal $aiDal;
-    private AnalyticsDAL $analyticsDal;
+    private AnalyticsBUS $analyticsBus;
+    private CategoryBUS $categoryBus;
+    private UserBUS $userBus;
 
     public function __construct() {
-        $this->aiDal = new AiInsightDAL();
-        $this->analyticsDal = new AnalyticsDAL();
+        $this->aiDal       = new AiInsightDAL();
+        $this->analyticsBus = new AnalyticsBUS();
+        $this->categoryBus  = new CategoryBUS();
+        $this->userBus      = new UserBUS();
     }
 
     public function checkCooldown(int $userId): array {
@@ -21,20 +25,19 @@ class AiAdvisorBUS
         foreach ($insights as $msg) {
             $msgTime = strtotime($msg['created_at']);
             $diff = abs($now - $msgTime);
-            if ($diff <= 86400) {
+            if ($diff <= self::COOLDOWN_SECONDS) {
                 $activeRequests[] = $msgTime;
             }
         }
         
         $used = count($activeRequests);
-        $max = 3; 
+        $max = self::MAX_DAILY_CONSULTS; 
         
         if ($used >= $max) {
-            rsort($activeRequests); 
             $oldestActive = min($activeRequests); 
             
             $diff = abs($now - $oldestActive);
-            $hoursLeft = ceil((86400 - $diff) / 3600);
+            $hoursLeft = ceil((self::COOLDOWN_SECONDS - $diff) / 3600);
             
             if ($hoursLeft < 1) $hoursLeft = 1;
             if ($hoursLeft > 24) $hoursLeft = 24;
@@ -51,23 +54,21 @@ class AiAdvisorBUS
             return ["status" => false, "message" => "Vui lòng chờ {$check['hours_left']} giờ nữa để nhận thêm lượt phân tích mới."];
         }
 
-        $transactions = $this->analyticsDal->getTransactionsForReport($userId, ['month' => date('Y-m')], 1, 500);
-        $res = $this->callPythonService(['type' => $type, 'transactions' => $transactions['data'] ?? []], '/api/chat');
+        $transactions = $this->analyticsBus->getReportData($userId, ['month' => date('Y-m')], 1, 500);
+        $res = $this->callPythonService(['type' => $type, 'transactions' => $transactions['transactions'] ?? []], '/api/chat');
 
         if ($res['status']) {
             $dto = new AiInsightDTO($userId, $type, $res['data']['answer']);
             $this->aiDal->insertInsight($dto);
-            (new UserDAL())->updateLastAiConsult($userId);
+            $this->userBus->updateLastAiConsult($userId);
             return ["status" => true, "answer" => $res['data']['answer']];
         }
         return ["status" => false, "message" => $res['error'] ?? 'Lỗi kết nối AI.'];
     }
 
     public function parseTextToTransaction(int $userId, string $text): array {
-        $stmt = Database::getInstance()->prepare("SELECT id, name, type FROM categories WHERE user_id = ?");
-        $stmt->execute([$userId]);
-        
-        $res = $this->callPythonService(['text' => $text, 'categories' => $stmt->fetchAll(PDO::FETCH_ASSOC)], '/api/parse');
+        $categories = $this->categoryBus->getCategoryTree($userId);
+        $res = $this->callPythonService(['text' => $text, 'categories' => $categories], '/api/parse');
         if ($res['status']) return ["status" => true, "data" => $res['data']['data']];
         return ["status" => false, "message" => "AI không hiểu được nội dung này."];
     }
@@ -77,7 +78,8 @@ class AiAdvisorBUS
     }
 
     private function callPythonService(array $data, string $endpoint): array {
-        $ch = curl_init('http://localhost:5000' . $endpoint);
+        $baseUrl = rtrim($_ENV['AI_SERVICE_URL'] ?? 'http://localhost:5000', '/');
+        $ch = curl_init($baseUrl . $endpoint);
         $jsonData = json_encode($data);
         
         // TĂNG TIMEOUT LÊN 60 GIÂY ĐỂ TRÁNH LỖI HTTP 0
@@ -86,7 +88,7 @@ class AiAdvisorBUS
             CURLOPT_POST => true, 
             CURLOPT_POSTFIELDS => $jsonData, 
             CURLOPT_HTTPHEADER => ['Content-Type: application/json'], 
-            CURLOPT_TIMEOUT => 60 
+            CURLOPT_TIMEOUT => self::AI_TIMEOUT 
         ]);
         
         $response = curl_exec($ch);

@@ -1,8 +1,13 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once __DIR__ . '/../../autoload.php';
 
 header('Content-Type: application/json; charset=utf-8');
+
+// Xác minh CSRF cho tất cả POST request
+CsrfHelper::verify(true);
 
 if (!isset($_SESSION['user_id'])) {
     echo json_encode(['status' => false, 'message' => 'Phiên đăng nhập đã hết hạn.']);
@@ -21,10 +26,21 @@ try {
 
         if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
             $file = $_FILES['avatar'];
-            $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-            
-            if (!in_array($file['type'], $allowedTypes)) {
-                echo json_encode(['status' => false, 'message' => 'Chỉ chấp nhận ảnh JPG, PNG, GIF.']);
+
+            // Giới hạn kích thước file: tối đa 2MB
+            if ($file['size'] > 2 * 1024 * 1024) {
+                echo json_encode(['status' => false, 'message' => 'Ảnh tải lên không được vượt quá 2MB.']);
+                exit();
+            }
+
+            // Kiểm tra MIME thực sự bằng finfo (không tin trình duyệt gửi lên)
+            $finfo    = finfo_open(FILEINFO_MIME_TYPE);
+            $realMime = finfo_file($finfo, $file['tmp_name']);
+            finfo_close($finfo);
+
+            $allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            if (!in_array($realMime, $allowedMimes)) {
+                echo json_encode(['status' => false, 'message' => 'Chỉ chấp nhận ảnh JPG, PNG, GIF, WebP.']);
                 exit();
             }
 
@@ -75,6 +91,22 @@ try {
         }
 
         $result = $userBUS->changePassword($userId, $oldPassword, $newPassword);
+        echo json_encode($result);
+        exit();
+    }
+    
+    // 3. XÓA TÀI KHOẢN
+    elseif ($action === 'delete_account') {
+        $password = $_POST['password'] ?? '';
+        if (empty($password)) {
+            echo json_encode(['status' => false, 'message' => 'Vui lòng nhập mật khẩu xác nhận.']);
+            exit();
+        }
+
+        $result = $userBUS->deleteAccount($userId, $password);
+        if ($result['status']) {
+            session_destroy();
+        }
         echo json_encode($result);
         exit();
     }

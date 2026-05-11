@@ -9,6 +9,14 @@ class UserBUS {
         $this->userDAL = new UserDAL();
     }
 
+    public function getUserById($id) {
+        return $this->userDAL->getUserById($id);
+    }
+
+    public function updateLastAiConsult($id) {
+        return $this->userDAL->updateLastAiConsult($id);
+    }
+
     private function generateRandomPassword($length = 6) {
         $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
         $password = '';
@@ -19,19 +27,24 @@ class UserBUS {
         return $password;
     }
 
+    private function generateCredentials() {
+        $randomPassword = $this->generateRandomPassword();
+        $passwordHash = password_hash($randomPassword, PASSWORD_DEFAULT);
+        $token = bin2hex(random_bytes(32));
+        return [$randomPassword, $passwordHash, $token];
+    }
+
     public function register($fullName, $email) {
         if ($this->userDAL->getUserByEmail($email)) {
             return ["status" => false, "message" => "Email này đã được đăng ký!"];
         }
 
-        $randomPassword = $this->generateRandomPassword();
-        $passwordHash = password_hash($randomPassword, PASSWORD_DEFAULT);
-        $token = bin2hex(random_bytes(32));
+        [$randomPassword, $passwordHash, $token] = $this->generateCredentials();
 
         $newUser = new UserDTO($fullName, $email, $passwordHash);
-        $result = $this->userDAL->createUserWithToken($newUser, $token);
+        $newUserId = $this->userDAL->createUserWithToken($newUser, $token);
 
-        if ($result) {
+        if ($newUserId) {
             return $this->sendActivationEmail($email, $token, $randomPassword, "Kích hoạt tài khoản CashFlow");
         }
         return ["status" => false, "message" => "Có lỗi xảy ra khi tạo tài khoản."];
@@ -39,13 +52,11 @@ class UserBUS {
 
     public function processForgotPassword($email) {
         $user = $this->userDAL->getUserByEmail($email);
-        if ($user == null) {
+        if ($user === null) {
             return ["status" => false, "message" => "Email không tồn tại trong hệ thống!"];
         }
 
-        $randomPassword = $this->generateRandomPassword();
-        $passwordHash = password_hash($randomPassword, PASSWORD_DEFAULT);
-        $token = bin2hex(random_bytes(32));
+        [$randomPassword, $passwordHash, $token] = $this->generateCredentials();
 
         $this->userDAL->resetAccountForActivation($email, $passwordHash, $token);
 
@@ -121,8 +132,24 @@ class UserBUS {
         return ["status" => false, "message" => "Đã xảy ra lỗi khi đổi mật khẩu."];
     }
 
+    public function deleteAccount($id, $password) {
+        $user = $this->userDAL->getUserById($id);
+        if ($user == null) return ["status" => false, "message" => "Người dùng không tồn tại!"];
+        
+        if (!password_verify($password, $user['password_hash'])) {
+            return ["status" => false, "message" => "Mật khẩu không chính xác! Không thể xóa tài khoản."];
+        }
+
+        $result = $this->userDAL->deleteUser($id);
+        if ($result) {
+            return ["status" => true, "message" => "Đã xóa tài khoản thành công!"];
+        }
+        return ["status" => false, "message" => "Có lỗi xảy ra trong quá trình xóa."];
+    }
+
     private function sendActivationEmail($email, $token, $randomPassword, $subject) {
-        $loginLink = "http://localhost/CashFlow/GUI/controllers/AuthController.php?action=verify_login&token=" . $token;
+        $appUrl = $_ENV['APP_URL'] ?? 'http://localhost/CashFlow';
+        $loginLink = rtrim($appUrl, '/') . "/GUI/controllers/AuthController.php?action=verify_login&token=" . $token;
         
         $body = "
             <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>

@@ -38,7 +38,12 @@ class UserDAL {
         $stmt->bindParam(':email', $email, PDO::PARAM_STR);
         $stmt->bindParam(':password_hash', $passwordHash, PDO::PARAM_STR);
         $stmt->bindParam(':login_token', $loginToken, PDO::PARAM_STR);
-        return $stmt->execute();
+        $success = $stmt->execute();
+        
+        if ($success) {
+            return $this->db->lastInsertId();
+        }
+        return false;
     }
 
     // Đưa tài khoản về trạng thái đăng nhập lần đầu (Dùng cho Quên mật khẩu)
@@ -97,6 +102,38 @@ class UserDAL {
         $sql = "UPDATE users SET last_ai_consult_at = :now WHERE id = :id";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([':now' => $now, ':id' => $userId]);
+    }
+
+    public function deleteUser($id) {
+        try {
+            $this->db->beginTransaction();
+            
+            // Xóa các bảng con trước để tránh lỗi Foreign Key Constraint
+            $stmt = $this->db->prepare("DELETE FROM transactions WHERE user_id = :id");
+            $stmt->execute([':id' => $id]);
+            
+            $stmt = $this->db->prepare("DELETE FROM budgets WHERE user_id = :id");
+            $stmt->execute([':id' => $id]);
+            
+            $stmt = $this->db->prepare("DELETE FROM categories WHERE user_id = :id");
+            $stmt->execute([':id' => $id]);
+            
+            $stmt = $this->db->prepare("DELETE FROM daily_notes WHERE user_id = :id");
+            $stmt->execute([':id' => $id]);
+            
+            $stmt = $this->db->prepare("DELETE FROM ai_insights WHERE user_id = :id");
+            $stmt->execute([':id' => $id]);
+
+            // Cuối cùng xóa user
+            $stmt = $this->db->prepare("DELETE FROM users WHERE id = :id");
+            $stmt->execute([':id' => $id]);
+            
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            return false;
+        }
     }
 }
 ?>

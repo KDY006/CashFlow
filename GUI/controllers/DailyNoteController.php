@@ -1,5 +1,7 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once __DIR__ . '/../../autoload.php';
 
 header('Content-Type: application/json; charset=utf-8');
@@ -7,6 +9,11 @@ header('Content-Type: application/json; charset=utf-8');
 if (!isset($_SESSION['user_id'])) {
     echo json_encode(['status' => false, 'message' => 'Lỗi xác thực.']);
     exit();
+}
+
+// Kiểm tra CSRF cho các yêu cầu POST (lưu ghi chú)
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    CsrfHelper::verify(true);
 }
 
 $userId = (int) $_SESSION['user_id'];

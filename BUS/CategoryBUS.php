@@ -36,6 +36,16 @@ class CategoryBUS {
     }
 
     public function deleteCategory($id, $userId) {
+        // Kiểm tra xem đây có phải là danh mục hệ thống không
+        $category = $this->categoryDAL->getCategoryById($id);
+        if (!$category) {
+            return ['status' => false, 'message' => 'Danh mục không tồn tại!'];
+        }
+        
+        if ($category['user_id'] === null) {
+            return ['status' => false, 'message' => 'Đây là danh mục dùng chung của hệ thống, bạn không thể xóa!'];
+        }
+
         if ($this->categoryDAL->isCategoryUsed($id, $userId)) {
             return ['status' => false, 'message' => 'Danh mục này đã có giao dịch, không thể xóa!'];
         }

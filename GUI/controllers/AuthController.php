@@ -1,10 +1,15 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once __DIR__ . '/../../autoload.php';
 
 $userBUS = new UserBUS();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Xác minh CSRF token cho tất cả POST request (trừ verify_login là GET)
+    CsrfHelper::verify(false);
+
     $action = $_POST['action'] ?? '';
 
     // Luồng Đăng ký
@@ -78,46 +83,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
 
-    // Luồng Cập nhật Profile
-    if ($action === 'update_profile') {
-        if (!isset($_SESSION['user_id'])) { header("Location: ../pages/auth/login.php"); exit(); }
-        $result = $userBUS->updateProfile($_SESSION['user_id'], trim($_POST['full_name']));
-        if ($result['status']) {
-            $_SESSION['user_name'] = trim($_POST['full_name']);
-            $_SESSION['success'] = $result['message'];
-        } else {
-            $_SESSION['error'] = $result['message'];
-        }
-        header("Location: ../pages/analytics/dashboard.php"); 
-        exit();
-    }
-
-    // Luồng Đổi mật khẩu chủ động
-    if ($action === 'change_password') {
-        if (!isset($_SESSION['user_id'])) { header("Location: ../pages/auth/login.php"); exit(); }
-        if ($_POST['new_password'] !== $_POST['confirm_password']) {
-            $_SESSION['error'] = "Mật khẩu xác nhận không khớp!";
-            header("Location: ../pages/analytics/dashboard.php");
-            exit();
-        }
-        
-        $result = $userBUS->changePassword($_SESSION['user_id'], $_POST['old_password'], $_POST['new_password']);
-        
-        if ($result['status']) { 
-            // Hủy phiên làm việc cũ (Đăng xuất)
-            session_unset();
-            session_destroy();
-            
-            // Khởi tạo phiên làm việc mới
-            session_start();
-            $_SESSION['success'] = "Đổi mật khẩu thành công! Vui lòng đăng nhập lại bằng mật khẩu mới của bạn.";
-            header("Location: ../pages/auth/login.php");
-        } else { 
-            $_SESSION['error'] = $result['message']; 
-            header("Location: ../pages/analytics/dashboard.php");
-        }
-        exit();
-    }
 }
 
 // Xử lý GET request

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 11, 2026 at 11:39 AM
+-- Generation Time: May 11, 2026 at 02:00 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -106,7 +106,31 @@ INSERT INTO `budgets` (`id`, `user_id`, `category_id`, `amount_limit`, `month`, 
 (6, 1, 6, 3000000.00, 5, '2026', '2026-05-09 19:26:27'),
 (7, 1, 8, 2000000.00, 5, '2026', '2026-05-09 19:26:27'),
 (8, 1, 9, 1000000.00, 5, '2026', '2026-05-09 19:26:27'),
-(9, 1, 13, 5000000.00, 5, '2026', '2026-05-09 19:26:27');
+(9, 1, 13, 5000000.00, 5, '2026', '2026-05-09 19:26:27'),
+(10, 1, 16, 3000000.00, 6, '2026', '2026-05-11 16:53:41'),
+(11, 1, 15, 2000000.00, 6, '2026', '2026-05-11 16:53:41'),
+(12, 1, 17, 1000000.00, 6, '2026', '2026-05-11 16:53:41'),
+(13, 1, 5, 1500000.00, 6, '2026', '2026-05-11 16:53:41'),
+(14, 1, 6, 3000000.00, 6, '2026', '2026-05-11 16:53:41'),
+(15, 1, 8, 2000000.00, 6, '2026', '2026-05-11 16:53:41'),
+(16, 1, 9, 1000000.00, 6, '2026', '2026-05-11 16:53:41'),
+(17, 1, 13, 5000000.00, 6, '2026', '2026-05-11 16:53:41'),
+(25, 1, 16, 3000000.00, 7, '2026', '2026-05-11 16:53:41'),
+(26, 1, 15, 2000000.00, 7, '2026', '2026-05-11 16:53:41'),
+(27, 1, 17, 1000000.00, 7, '2026', '2026-05-11 16:53:41'),
+(28, 1, 5, 1500000.00, 7, '2026', '2026-05-11 16:53:41'),
+(29, 1, 6, 3000000.00, 7, '2026', '2026-05-11 16:53:41'),
+(30, 1, 8, 2000000.00, 7, '2026', '2026-05-11 16:53:41'),
+(31, 1, 9, 1000000.00, 7, '2026', '2026-05-11 16:53:41'),
+(32, 1, 13, 5000000.00, 7, '2026', '2026-05-11 16:53:41'),
+(40, 1, 16, 3000000.00, 8, '2026', '2026-05-11 16:53:42'),
+(41, 1, 15, 2000000.00, 8, '2026', '2026-05-11 16:53:42'),
+(42, 1, 17, 1000000.00, 8, '2026', '2026-05-11 16:53:42'),
+(43, 1, 5, 1500000.00, 8, '2026', '2026-05-11 16:53:42'),
+(44, 1, 6, 3000000.00, 8, '2026', '2026-05-11 16:53:42'),
+(45, 1, 8, 2000000.00, 8, '2026', '2026-05-11 16:53:42'),
+(46, 1, 9, 1000000.00, 8, '2026', '2026-05-11 16:53:42'),
+(47, 1, 13, 5000000.00, 8, '2026', '2026-05-11 16:53:42');
 
 -- --------------------------------------------------------
 
@@ -116,7 +140,7 @@ INSERT INTO `budgets` (`id`, `user_id`, `category_id`, `amount_limit`, `month`, 
 
 CREATE TABLE `categories` (
   `id` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
   `parent_id` int(11) DEFAULT NULL,
   `name` varchar(100) NOT NULL,
   `type` enum('income','expense') NOT NULL,
@@ -128,27 +152,27 @@ CREATE TABLE `categories` (
 --
 
 INSERT INTO `categories` (`id`, `user_id`, `parent_id`, `name`, `type`, `created_at`) VALUES
-(1, 1, NULL, 'Chi phí cố định', 'expense', '2026-05-09 19:12:44'),
-(2, 1, NULL, 'Chi phí phát sinh', 'expense', '2026-05-09 19:12:44'),
-(3, 1, NULL, 'Đầu tư tiết kiệm', 'expense', '2026-05-09 19:12:44'),
-(4, 1, NULL, 'Chi tiêu - Sinh hoạt', 'expense', '2026-05-09 19:12:44'),
-(5, 1, 1, 'Hóa đơn', 'expense', '2026-05-09 19:12:44'),
-(6, 1, 1, 'Nhà cửa', 'expense', '2026-05-09 19:12:44'),
-(7, 1, 1, 'Người thân', 'expense', '2026-05-09 19:12:44'),
-(8, 1, 2, 'Mua sắm', 'expense', '2026-05-09 19:12:44'),
-(9, 1, 2, 'Giải trí', 'expense', '2026-05-09 19:12:44'),
-(10, 1, 2, 'Làm đẹp', 'expense', '2026-05-09 19:12:44'),
-(11, 1, 2, 'Sức khỏe', 'expense', '2026-05-09 19:12:44'),
-(12, 1, 2, 'Từ thiện', 'expense', '2026-05-09 19:12:44'),
-(13, 1, 3, 'Đầu tư', 'expense', '2026-05-09 19:12:44'),
-(14, 1, 3, 'Học tập', 'expense', '2026-05-09 19:12:44'),
-(15, 1, 4, 'Chợ, siêu thị', 'expense', '2026-05-09 19:12:44'),
-(16, 1, 4, 'Ăn uống', 'expense', '2026-05-09 19:12:44'),
-(17, 1, 4, 'Di chuyển', 'expense', '2026-05-09 19:12:44'),
-(18, 1, NULL, 'Lương', 'income', '2026-05-09 19:12:44'),
-(19, 1, NULL, 'Tiền Tip / Thưởng', 'income', '2026-05-09 19:12:44'),
-(20, 1, NULL, 'Freelance', 'income', '2026-05-09 19:12:44'),
-(21, 1, NULL, 'Thu nhập khác', 'income', '2026-05-09 19:12:44');
+(1, NULL, NULL, 'Chi phí cố định', 'expense', '2026-05-09 19:12:44'),
+(2, NULL, NULL, 'Chi phí phát sinh', 'expense', '2026-05-09 19:12:44'),
+(3, NULL, NULL, 'Đầu tư tiết kiệm', 'expense', '2026-05-09 19:12:44'),
+(4, NULL, NULL, 'Chi tiêu - Sinh hoạt', 'expense', '2026-05-09 19:12:44'),
+(5, NULL, 1, 'Hóa đơn', 'expense', '2026-05-09 19:12:44'),
+(6, NULL, 1, 'Nhà cửa', 'expense', '2026-05-09 19:12:44'),
+(7, NULL, 1, 'Người thân', 'expense', '2026-05-09 19:12:44'),
+(8, NULL, 2, 'Mua sắm', 'expense', '2026-05-09 19:12:44'),
+(9, NULL, 2, 'Giải trí', 'expense', '2026-05-09 19:12:44'),
+(10, NULL, 2, 'Làm đẹp', 'expense', '2026-05-09 19:12:44'),
+(11, NULL, 2, 'Sức khỏe', 'expense', '2026-05-09 19:12:44'),
+(12, NULL, 2, 'Từ thiện', 'expense', '2026-05-09 19:12:44'),
+(13, NULL, 3, 'Đầu tư', 'expense', '2026-05-09 19:12:44'),
+(14, NULL, 3, 'Học tập', 'expense', '2026-05-09 19:12:44'),
+(15, NULL, 4, 'Chợ, siêu thị', 'expense', '2026-05-09 19:12:44'),
+(16, NULL, 4, 'Ăn uống', 'expense', '2026-05-09 19:12:44'),
+(17, NULL, 4, 'Di chuyển', 'expense', '2026-05-09 19:12:44'),
+(18, NULL, NULL, 'Lương', 'income', '2026-05-09 19:12:44'),
+(19, NULL, NULL, 'Tiền Tip / Thưởng', 'income', '2026-05-09 19:12:44'),
+(20, NULL, NULL, 'Freelance', 'income', '2026-05-09 19:12:44'),
+(21, NULL, NULL, 'Thu nhập khác', 'income', '2026-05-09 19:12:44');
 
 -- --------------------------------------------------------
 
@@ -210,7 +234,8 @@ INSERT INTO `transactions` (`id`, `user_id`, `category_id`, `amount`, `transacti
 (14, 1, 14, 500000.00, '2026-05-08 15:00:00', 'Mua khóa học lập trình Web', '2026-05-09 19:14:44'),
 (15, 1, 16, 30000.00, '2026-05-09 22:50:00', 'Ăn trưa căn tin', '2026-05-09 22:50:31'),
 (16, 1, 17, 30000.00, '2026-05-10 22:39:00', 'Đổ xăng', '2026-05-10 22:40:18'),
-(17, 1, 17, 6000.00, '2026-05-11 16:03:00', 'đi bus', '2026-05-11 16:05:13');
+(17, 1, 17, 6000.00, '2026-05-11 16:03:00', 'đi bus', '2026-05-11 16:05:13'),
+(18, 1, 16, 30000.00, '2026-05-11 17:51:00', 'ăn tối', '2026-05-11 17:51:36');
 
 -- --------------------------------------------------------
 
@@ -236,7 +261,7 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `full_name`, `avatar_url`, `email`, `password_hash`, `is_first_login`, `login_token`, `created_at`, `updated_at`, `last_ai_consult_at`) VALUES
-(1, 'Nguyễn Văn Duy', '/assets/images/avatars/avatar_6a0096e1e5f3d_1778423521.jpg', 'nvduy180706@gmail.com', '$2y$10$1hAgJoWALkSALob2/WFdBecI7uYpzUKlc9twQwr.wblxY5FwFl.mC', 0, NULL, '2026-04-28 21:47:09', '2026-05-11 16:21:29', '2026-05-11 11:05:47');
+(1, 'Nguyễn Văn Duy', 'avatar_6a01bbbe83e2f_1778498494.jpg', 'nvduy180706@gmail.com', '$2y$10$TE0zgf8All3VWduAB1H4R.vBpKcFUPN1D3BzYGbmB2e0SL9pDhYQS', 0, NULL, '2026-04-28 21:47:09', '2026-05-11 18:41:37', '2026-05-11 11:05:47');
 
 --
 -- Indexes for dumped tables
@@ -298,37 +323,37 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `ai_insights`
 --
 ALTER TABLE `ai_insights`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=63;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=66;
 
 --
 -- AUTO_INCREMENT for table `budgets`
 --
 ALTER TABLE `budgets`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
 
 --
 -- AUTO_INCREMENT for table `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=87;
 
 --
 -- AUTO_INCREMENT for table `daily_notes`
 --
 ALTER TABLE `daily_notes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `transactions`
 --
 ALTER TABLE `transactions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- Constraints for dumped tables

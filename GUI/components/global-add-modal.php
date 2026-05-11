@@ -249,7 +249,9 @@
 
     document.getElementById('globalTransactionForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const res = await fetch('../../controllers/TransactionController.php', { method: 'POST', body: new FormData(e.target) });
+        
+        const fd = new FormData(e.target);
+        const res = await fetch('../../controllers/TransactionController.php', { method: 'POST', body: fd });
         const result = await res.json();
         
         // Đã thay thế alert bằng Toast

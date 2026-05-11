@@ -8,10 +8,24 @@ class CategoryDAL {
         $this->db = Database::getInstance();
     }
 
+    public function getAllCategories(int $userId): array {
+        $sql = "SELECT * FROM categories WHERE user_id = :user_id OR user_id IS NULL ORDER BY name ASC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':user_id' => $userId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getCategoriesByType(int $userId, string $type): array {
+        $sql = "SELECT * FROM categories WHERE (user_id = :user_id OR user_id IS NULL) AND type = :type ORDER BY name ASC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':user_id' => $userId, ':type' => $type]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     // LẤY DANH MỤC THEO CẤU TRÚC CÂY (CHA - CON)
     public function getCategoryTree($userId) {
         // Ưu tiên hiển thị: Thu nhập trước, Chi tiêu sau. Sau đó sắp xếp theo cha con.
-        $sql = "SELECT * FROM categories WHERE user_id = :user_id ORDER BY type DESC, parent_id ASC, name ASC";
+        $sql = "SELECT * FROM categories WHERE user_id = :user_id OR user_id IS NULL ORDER BY type DESC, parent_id ASC, name ASC";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([':user_id' => $userId]);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -52,7 +66,14 @@ class CategoryDAL {
         ]);
     }
 
-    // CÁC HÀM CŨ GIỮ NGUYÊN
+    public function getCategoryById($id) {
+        $sql = "SELECT * FROM categories WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
     public function deleteCategory($id, $userId) {
         $sql = "DELETE FROM categories WHERE id = :id AND user_id = :user_id";
         $stmt = $this->db->prepare($sql);

@@ -73,4 +73,4 @@ def chat_consult():
         return jsonify({"status": False, "error": "Hệ thống AI đang quá tải hoặc gặp lỗi bảo mật của Gemini!"}), 500
 
 if __name__ == '__main__':
-    app.run(port=5000, debug=True)
+    app.run(port=5000, debug=False)

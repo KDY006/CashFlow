@@ -32,9 +32,6 @@ class TransactionDAL {
             $stmt->bindParam(':note', $note, PDO::PARAM_STR);
 
             $stmt->execute();
-            
-            // Lấy ID vừa tạo (nếu cần thiết sau này)
-            $lastInsertId = $this->db->lastInsertId();
 
             $this->db->commit();
             return true;

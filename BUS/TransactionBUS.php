@@ -71,5 +71,32 @@ class TransactionBUS {
         if ($result) return ["status" => true, "message" => "Đã xóa giao dịch khỏi hệ thống."];
         return ["status" => false, "message" => "Không thể xóa giao dịch này."];
     }
+
+    // Lấy tất cả giao dịch RAW — chỉ dùng nội bộ trong BUS
+    private function getAllTransactionsRaw($userId) {
+        return $this->transactionDAL->getAllTransactionsRaw($userId);
+    }
+
+    // Lấy tất cả giao dịch đã format sẵn để trả về cho Controller
+    public function getAllTransactionsFormatted($userId): array {
+        $transactions = $this->transactionDAL->getAllTransactionsRaw($userId);
+        $result = [];
+        foreach ($transactions as $t) {
+            $result[] = [
+                'id'             => $t['id'],
+                'category_id'   => $t['category_id'],
+                'category_name' => htmlspecialchars($t['category_name'] ?? '', ENT_QUOTES, 'UTF-8'),
+                'category_type' => $t['category_type'],
+                'parent_id'     => $t['parent_id'],
+                'parent_name'   => htmlspecialchars($t['parent_name'] ?? ($t['category_type'] === 'income' ? 'Thu nhập' : 'Khác'), ENT_QUOTES, 'UTF-8'),
+                'amount'          => $t['amount'],
+                'formatted_amount' => FormatHelper::formatCurrency($t['amount']),
+                'formatted_date'  => FormatHelper::formatDate($t['transaction_date']),
+                'raw_date'        => $t['transaction_date'],
+                'note'            => htmlspecialchars($t['note'] ?? '', ENT_QUOTES, 'UTF-8'),
+            ];
+        }
+        return $result;
+    }
 }
 ?>

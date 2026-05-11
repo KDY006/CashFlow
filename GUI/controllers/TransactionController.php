@@ -1,7 +1,9 @@
 <?php
 // Tệp: GUI/controllers/TransactionController.php
 
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once __DIR__ . '/../../autoload.php';
 
 // Trả về JSON header để trình duyệt hiểu đây là API
@@ -17,6 +19,11 @@ $userId = $_SESSION['user_id'];
 
 // AJAX thường gửi dữ liệu qua POST, nhưng đôi khi dùng GET để lấy dữ liệu
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
+
+// Xác minh CSRF cho các action thay đổi dữ liệu (POST)
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    CsrfHelper::verify(true);
+}
 
 // Luồng THÊM GIAO DỊCH
 if ($action === 'add') {
@@ -52,26 +59,8 @@ if ($action === 'get') {
 
 // LẤY DANH SÁCH GIAO DỊCH (Bản V2 hỗ trợ lọc Cha/Con)
 if ($action === 'get_all') {
-    $transactionDAL = new TransactionDAL();
-    $transactions = $transactionDAL->getAllTransactionsRaw($userId);
-    
-    $arr = [];
-    foreach ($transactions as $t) {
-        $arr[] = [
-            'id' => $t['id'],
-            'category_id' => $t['category_id'],
-            'category_name' => $t['category_name'],
-            'category_type' => $t['category_type'],
-            'parent_id' => $t['parent_id'],
-            'parent_name' => $t['parent_name'] ?? ($t['category_type'] === 'income' ? 'Thu nhập' : 'Khác'),
-            'amount' => $t['amount'],
-            'formatted_amount' => FormatHelper::formatCurrency($t['amount']),
-            'formatted_date' => FormatHelper::formatDate($t['transaction_date']),
-            'raw_date' => $t['transaction_date'],
-            'note' => $t['note']
-        ];
-    }
-    echo json_encode(['status' => true, 'data' => $arr]);
+    $result = $transactionBUS->getAllTransactionsFormatted($userId);
+    echo json_encode(['status' => true, 'data' => $result]);
     exit();
 }
 ?>

@@ -5,8 +5,8 @@ require_once __DIR__ . '/../../../autoload.php';
 
 // Lấy thông tin user mới nhất từ DB
 $userId = $_SESSION['user_id'];
-$userDAL = new UserDAL();
-$currentUser = $userDAL->getUserById($userId);
+$userBUS = new UserBUS();
+$currentUser = $userBUS->getUserById($userId);
 
 if (!$currentUser) {
     header("Location: ../../controllers/AuthController.php?action=logout");
@@ -15,7 +15,7 @@ if (!$currentUser) {
 
 // Logic hiển thị ảnh đại diện
 $avatarUrl = !empty($currentUser['avatar_url']) 
-    ? '../../' . ltrim($currentUser['avatar_url'], '/') 
+    ? '../../assets/images/avatars/' . ltrim($currentUser['avatar_url'], '/') 
     : 'https://ui-avatars.com/api/?name=' . urlencode($currentUser['full_name']) . '&background=0d6efd&color=fff&size=256';
 ?>
 <!DOCTYPE html>
@@ -98,6 +98,11 @@ $avatarUrl = !empty($currentUser['avatar_url'])
                                 <i class="bi bi-shield-lock-fill me-1"></i> Đổi mật khẩu
                             </button>
                         </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link text-danger border-danger border-opacity-25 bg-opacity-10" id="advanced-tab" data-bs-toggle="tab" data-bs-target="#advanced-pane" type="button" role="tab">
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i> Cài đặt nâng cao
+                            </button>
+                        </li>
                     </ul>
 
                     <div class="tab-content" id="profileTabsContent">
@@ -177,11 +182,53 @@ $avatarUrl = !empty($currentUser['avatar_url'])
                             </form>
                         </div>
 
+                        <!-- TAB CÀI ĐẶT NÂNG CAO (XÓA TÀI KHOẢN) -->
+                        <div class="tab-pane fade px-md-3" id="advanced-pane" role="tabpanel">
+                            <div class="p-4 rounded-4 border border-danger border-opacity-25" style="background-color: #fff5f5;">
+                                <h5 class="text-danger fw-bold mb-3"><i class="bi bi-exclamation-triangle-fill me-2"></i>Vùng nguy hiểm (Danger Zone)</h5>
+                                <p class="text-muted mb-4">
+                                    Hành động này sẽ <strong>xóa vĩnh viễn</strong> toàn bộ dữ liệu của bạn trên hệ thống CashFlow, bao gồm mọi giao dịch, danh mục, ngân sách và ghi chú. Dữ liệu sau khi xóa <strong>không thể khôi phục lại</strong> bằng bất kỳ cách nào.
+                                </p>
+                                
+                                <div class="text-end">
+                                    <button type="button" class="btn btn-danger rounded-pill fw-bold shadow-sm px-4 py-2" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                                        <i class="bi bi-trash3-fill me-2"></i>Xóa tài khoản vĩnh viễn
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
         </div>
     </main>
+
+    <!-- MODAL XÁC NHẬN XÓA TÀI KHOẢN -->
+    <div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4 shadow-lg">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-danger"><i class="bi bi-shield-lock-fill me-2"></i>Xác nhận xóa tài khoản</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body pb-2">
+                    <p class="text-muted small">Để đảm bảo an toàn, vui lòng nhập mật khẩu hiện tại của bạn để xác nhận hành động này.</p>
+                    <form id="deleteAccountForm">
+                        <input type="hidden" name="action" value="delete_account">
+                        <div class="input-group input-group-lg input-group-custom shadow-sm mb-3">
+                            <span class="input-group-text"><i class="bi bi-key-fill text-muted"></i></span>
+                            <input type="password" name="password" class="form-control fw-semibold text-dark" placeholder="Nhập mật khẩu..." required>
+                        </div>
+                        <div class="text-end mt-4 mb-2">
+                            <button type="button" class="btn btn-light rounded-pill px-4 fw-bold me-2" data-bs-dismiss="modal">Hủy</button>
+                            <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold">Xác nhận xóa</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1055">
         <div id="liveToast" class="toast align-items-center border-0 rounded-3 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
@@ -267,6 +314,37 @@ $avatarUrl = !empty($currentUser['avatar_url'])
                 showToast('Lỗi kết nối máy chủ!', false);
             } finally {
                 btn.innerHTML = '<i class="bi bi-arrow-repeat me-2"></i>Cập nhật mật khẩu';
+                btn.disabled = false;
+            }
+        });
+
+        // Xử lý Form Xóa Tài Khoản
+        document.getElementById('deleteAccountForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang xóa...';
+            btn.disabled = true;
+
+            const fd = new FormData(e.target);
+            try {
+                const res = await fetch('../../controllers/UserController.php', { method: 'POST', body: fd });
+                const result = await res.json();
+                
+                if (result.status) {
+                    showToast(result.message, true);
+                    // Đợi 1.5 giây rồi chuyển hướng về trang đăng nhập
+                    setTimeout(() => {
+                        window.location.href = '../../controllers/AuthController.php?action=logout';
+                    }, 1500);
+                } else {
+                    showToast(result.message, false);
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
+            } catch (error) {
+                showToast('Lỗi kết nối máy chủ!', false);
+                btn.innerHTML = originalText;
                 btn.disabled = false;
             }
         });

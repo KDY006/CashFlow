@@ -16,10 +16,10 @@ $maxRequests = $cooldown['max'] ?? 3;
 
 $groupedHistory = [];
 $typeToUserMsg = [
-    'warning' => 'Tìm điểm lãng phí & Cảnh báo',
-    'advice'  => 'Cho tôi lời khuyên tiết kiệm',
-    'forecast'=> 'Dự báo tài chính cuối tháng',
-    'summary' => 'Tóm tắt tình hình tháng này'
+    'warning' => 'Cảnh báo',
+    'advice'  => 'Lời khuyên tiết kiệm',
+    'forecast'=> 'Dự báo tài chính',
+    'summary' => 'Tóm tắt tình hình'
 ];
 
 foreach (array_reverse($chatHistory) as $msg) {

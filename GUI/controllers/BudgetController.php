@@ -17,11 +17,17 @@ $action = $_POST['action'] ?? $_GET['action'] ?? '';
 
 // Lấy danh sách hũ ngân sách của một tháng cụ thể
 if ($action === 'get_by_month') {
-    // Nếu Client không truyền tháng/năm, mặc định lấy tháng/năm hiện tại
     $month = $_GET['month'] ?? date('n');
     $year = $_GET['year'] ?? date('Y');
     
     $budgets = $budgetBUS->getBudgetsByMonth($userId, $month, $year);
+    
+    // LOGIC NÂNG CẤP: Tự động duy trì hũ ngân sách sang tháng mới
+    if (empty($budgets)) {
+        $budgetBUS->clonePreviousMonthBudgets($userId, $month, $year);
+        // Tải lại dữ liệu sau khi đã tự động sao chép
+        $budgets = $budgetBUS->getBudgetsByMonth($userId, $month, $year);
+    }
     
     $data = [];
     foreach ($budgets as $b) {
@@ -29,20 +35,17 @@ if ($action === 'get_by_month') {
             'id' => $b->getId(),
             'category_id' => $b->getCategoryId(),
             'category_name' => $b->getCategoryName(),
-            'category_type' => $b->getCategoryType(), // Sẽ dùng để tránh lập ngân sách cho khoản Thu
+            'category_type' => $b->getCategoryType(), 
             
-            // Số liệu gốc để tính toán nếu cần
             'amount_limit' => $b->getAmountLimit(),
             'total_spent' => $b->getTotalSpent(),
             'remain_amount' => $b->getRemainAmount(),
             'progress_percentage' => $b->getProgressPercentage(),
             
-            // Chuỗi đã định dạng sẵn (VD: 3.000.000 đ) để hiển thị ngay
             'formatted_limit' => FormatHelper::formatCurrency($b->getAmountLimit()),
             'formatted_spent' => FormatHelper::formatCurrency($b->getTotalSpent()),
-            'formatted_remain' => FormatHelper::formatCurrency(abs($b->getRemainAmount())), // Lấy trị tuyệt đối để hiện chữ "Âm" hoặc "Vượt mức" trên UI
+            'formatted_remain' => FormatHelper::formatCurrency(abs($b->getRemainAmount())), 
             
-            // Sinh màu sắc đồng bộ với Module Giao dịch
             'color_class' => FormatHelper::getCategoryBadgeColor($b->getCategoryId())
         ];
     }

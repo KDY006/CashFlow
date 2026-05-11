@@ -33,6 +33,12 @@ $userId = $_SESSION['user_id'];
         /* Card Giao dịch */
         .transaction-card { transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; border: 1px solid #f0f2f5;}
         .transaction-card:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.05) !important; border-color: #e9ecef; }
+        
+        /* Đồng bộ Modal Sửa */
+        .input-group-custom { border: 1px solid #dee2e6; border-radius: 12px; overflow: hidden; background-color: #f8f9fa; transition: all 0.2s; }
+        .input-group-custom:focus-within { border-color: #0d6efd; background-color: #fff; box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1); }
+        .input-group-custom .input-group-text { background: transparent; border: none; padding-left: 1.25rem; color: #6c757d; }
+        .input-group-custom .form-control, .input-group-custom .form-select { background: transparent; border: none; box-shadow: none; padding-left: 0.5rem; }
     </style>
 </head>
 <body class="bg-light">
@@ -95,42 +101,52 @@ $userId = $_SESSION['user_id'];
 
     <div class="modal fade" id="editTransactionModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow rounded-4">
-                <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold">Sửa Giao Dịch</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-header border-0 pb-0 pt-4 px-4">
+                    <h5 class="modal-title fw-bold text-dark"><i class="bi bi-pencil-square text-primary me-2"></i>Chỉnh sửa Giao dịch</h5>
+                    <button type="button" class="btn-close bg-light rounded-circle p-2" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body p-4">
+                <div class="modal-body p-4 pt-3">
                     <form id="editTransactionForm">
                         <input type="hidden" name="action" value="edit">
                         <input type="hidden" name="id" id="editTransactionId">
 
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold text-muted small">SỐ TIỀN (VNĐ)</label>
-                            <div class="input-group input-group-lg">
-                                <span class="input-group-text bg-white text-success fw-bold">₫</span>
-                                <input type="text" id="editAmountDisplay" class="form-control text-end fs-4 fw-bold text-success" required>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-muted small mb-1">SỐ TIỀN (VNĐ)</label>
+                            <div class="input-group input-group-lg border rounded-4 overflow-hidden" style="transition: 0.2s;">
+                                <span class="input-group-text bg-white border-0 text-primary fw-bold fs-4">₫</span>
+                                <input type="text" id="editAmountDisplay" class="form-control border-0 text-end fs-3 fw-bold text-primary shadow-none p-3" required>
                                 <input type="hidden" name="amount" id="editAmount">
                             </div>
-                            <div id="editAmountInWords" class="form-text text-end fst-italic text-success mt-1" style="min-height: 20px;"></div>
+                            <div id="editAmountInWords" class="text-end fst-italic text-primary mt-1 fw-semibold" style="min-height: 20px; font-size: 0.75rem;"></div>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-semibold text-muted small">DANH MỤC</label>
-                            <select name="category_id" id="editCategoryId" class="form-select form-select-lg" required></select>
+                            <label class="form-label fw-bold text-muted small mb-1">DANH MỤC GIAO DỊCH</label>
+                            <div class="input-group input-group-lg input-group-custom">
+                                <span class="input-group-text"><i class="bi bi-tags-fill"></i></span>
+                                <select name="category_id" id="editCategoryId" class="form-select fw-semibold" required></select>
+                            </div>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-semibold text-muted small">THỜI GIAN</label>
-                            <input type="datetime-local" name="transaction_date" id="editTransactionDate" class="form-control form-control-lg" required>
+                            <label class="form-label fw-bold text-muted small mb-1">THỜI GIAN</label>
+                            <div class="input-group input-group-lg input-group-custom">
+                                <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
+                                <input type="datetime-local" name="transaction_date" id="editTransactionDate" class="form-control fw-semibold" required>
+                            </div>
                         </div>
 
                         <div class="mb-4">
-                            <label class="form-label fw-semibold text-muted small">GHI CHÚ</label>
-                            <textarea name="note" id="editNote" class="form-control" rows="2"></textarea>
+                            <label class="form-label fw-bold text-muted small mb-1">GHI CHÚ THÊM</label>
+                            <div class="input-group input-group-custom p-2">
+                                <textarea name="note" id="editNote" class="form-control border-0" rows="2" placeholder="Chi tiết giao dịch..."></textarea>
+                            </div>
                         </div>
 
-                        <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill shadow-sm fw-bold">Cập Nhật</button>
+                        <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill shadow-sm fw-bold">
+                            <i class="bi bi-save2 me-2"></i>Lưu Thay Đổi
+                        </button>
                     </form>
                 </div>
             </div>
@@ -138,8 +154,8 @@ $userId = $_SESSION['user_id'];
     </div>
 
     <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1055">
-        <div id="liveToast" class="toast align-items-center text-bg-success border-0" role="alert">
-            <div class="d-flex"><div class="toast-body fw-semibold" id="toastMessage">Thông báo!</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>
+        <div id="liveToast" class="toast align-items-center border-0 rounded-3 shadow-lg" role="alert">
+            <div class="d-flex"><div class="toast-body fw-semibold px-3 py-3" id="toastMessage">Thông báo!</div><button type="button" class="btn-close btn-close-white me-3 m-auto" data-bs-dismiss="toast"></button></div>
         </div>
     </div>
 
@@ -158,7 +174,7 @@ $userId = $_SESSION['user_id'];
 
         function showToast(message, isSuccess = true) {
             document.getElementById('toastMessage').innerText = message;
-            toastEl.className = isSuccess ? 'toast align-items-center text-bg-success border-0' : 'toast align-items-center text-bg-danger border-0';
+            toastEl.className = isSuccess ? 'toast align-items-center text-bg-success border-0 rounded-3 shadow-lg' : 'toast align-items-center text-bg-danger border-0 rounded-3 shadow-lg';
             toast.show();
         }
 
@@ -173,26 +189,31 @@ $userId = $_SESSION['user_id'];
             editAmountWords.innerText = rawValue ? window.readVietnameseNumber(parseInt(rawValue)) : "";
         });
 
+        // ĐÃ FIX LỖI HIỂN THỊ NGÀY THÁNG LÚC MỞ MODAL SỬA
         async function openEditModal(id) {
             const res = await fetch(`../../controllers/TransactionController.php?action=get&id=${id}`);
             const result = await res.json();
             if(result.status) {
                 document.getElementById('editTransactionId').value = result.data.id;
+                
                 const amountValue = result.data.amount.split('.')[0];
                 editAmountInput.value = window.formatNumberInput(amountValue);
                 editHiddenAmount.value = amountValue;
-                
-                // THÊM DÒNG NÀY: Hiển thị chữ ngay khi mở Modal
                 editAmountWords.innerText = window.readVietnameseNumber(parseInt(amountValue));
                 
                 document.getElementById('editCategoryId').value = result.data.category_id;
-                document.getElementById('editTransactionDate').value = result.data.transaction_date; 
+                
+                // Format lại ngày tháng chuẩn cho thẻ input datetime-local
+                let dbDate = result.data.transaction_date; // Dạng: 2026-05-01 08:30:00
+                if(dbDate) {
+                    document.getElementById('editTransactionDate').value = dbDate.replace(' ', 'T').substring(0, 16);
+                }
+                
                 document.getElementById('editNote').value = result.data.note;
                 editTransModal.show();
             }
         }
 
-        // 1. TẢI CÂY DANH MỤC (Vẽ Nút Lọc + Option Modal)
         async function fetchCategories() {
             try {
                 const res = await fetch('../../controllers/CategoryController.php?action=get_tree');
@@ -202,7 +223,6 @@ $userId = $_SESSION['user_id'];
                     categoryTree = result.data;
                     renderPillFilters();
                     
-                    // Nạp vào Modal Edit
                     const editSelect = document.getElementById('editCategoryId');
                     editSelect.innerHTML = '<option value="" disabled selected>-- Chọn danh mục --</option>';
                     categoryTree.forEach(parent => {
@@ -210,7 +230,9 @@ $userId = $_SESSION['user_id'];
                             editSelect.innerHTML += `<option value="${parent.id}">🟢 ${parent.name} (Thu)</option>`;
                         } else {
                             let optgroup = `<optgroup label="🔴 ${parent.name}">`;
-                            parent.children.forEach(child => { optgroup += `<option value="${child.id}">${child.name}</option>`; });
+                            if(parent.children) {
+                                parent.children.forEach(child => { optgroup += `<option value="${child.id}">${child.name}</option>`; });
+                            }
                             optgroup += `</optgroup>`;
                             editSelect.innerHTML += optgroup;
                         }
@@ -219,7 +241,6 @@ $userId = $_SESSION['user_id'];
             } catch (e) { console.error(e); }
         }
 
-        // 2. CHUYỂN ĐỔI TAB CHÍNH (Thu / Chi)
         function switchMainTab(tab) {
             currentMainTab = tab;
             document.getElementById('btnTabExpense').classList.remove('active-expense');
@@ -232,12 +253,11 @@ $userId = $_SESSION['user_id'];
                 document.getElementById('btnTabIncome').classList.add('active-income');
                 document.getElementById('parentFiltersWrapper').style.display = 'none';
             }
-            currentParentFilter = 'all'; // Reset filter con
+            currentParentFilter = 'all'; 
             renderPillFilters();
             renderTransactions();
         }
 
-        // 3. VẼ NÚT LỌC (Pill Buttons) CHO CHI TIÊU
         function renderPillFilters() {
             const container = document.getElementById('pillContainer');
             const expenseParents = categoryTree.filter(c => c.type === 'expense');
@@ -256,7 +276,6 @@ $userId = $_SESSION['user_id'];
             renderTransactions();
         }
 
-        // 4. TẢI DỮ LIỆU GIAO DỊCH TỪ API
         async function fetchTransactions() {
             document.getElementById('loadingSpinner').classList.remove('d-none');
             document.getElementById('transactionList').innerHTML = '';
@@ -271,7 +290,6 @@ $userId = $_SESSION['user_id'];
                     rawDateObj: new Date(item.raw_date) 
                 }));
                 
-                // Tính tổng thu chi hiển thị lên 2 tab lớn
                 let sumInc = 0; let sumExp = 0;
                 allData.forEach(t => { if(t.category_type === 'income') sumInc += t.rawAmount; else sumExp += t.rawAmount; });
                 document.getElementById('totalIncomeText').innerText = '+' + window.formatNumberInput(sumInc.toString()) + ' đ';
@@ -282,22 +300,18 @@ $userId = $_SESSION['user_id'];
             document.getElementById('loadingSpinner').classList.add('d-none');
         }
 
-        // 5. HIỂN THỊ DỮ LIỆU (Cốt lõi logic Gom nhóm)
         function renderTransactions() {
             let filtered = allData.filter(t => t.category_type === currentMainTab);
 
-            // Tìm kiếm
             const keyword = document.getElementById('searchInput').value.toLowerCase();
             if (keyword) {
                 filtered = filtered.filter(t => t.category_name.toLowerCase().includes(keyword) || (t.note && t.note.toLowerCase().includes(keyword)));
             }
 
-            // Lọc theo Danh mục Cha (Nếu ở Tab Chi tiêu)
             if (currentMainTab === 'expense' && currentParentFilter !== 'all') {
                 filtered = filtered.filter(t => t.parent_id == currentParentFilter);
             }
 
-            // Sắp xếp
             const sortOrder = document.getElementById('sortOrder').value;
             filtered.sort((a, b) => {
                 if (sortOrder === 'date_desc') return b.rawDateObj - a.rawDateObj;
@@ -317,17 +331,16 @@ $userId = $_SESSION['user_id'];
                 return;
             }
 
-            // === LOGIC GOM NHÓM THÔNG MINH ===
             const grouped = {};
             filtered.forEach(t => {
                 let groupName = '';
                 if (currentMainTab === 'income') {
-                    groupName = 'Khoản thu'; // Thu nhập gom chung 1 cục
+                    groupName = 'Khoản thu'; 
                 } else {
                     if (currentParentFilter === 'all') {
-                        groupName = t.parent_name; // Gom theo nhóm lớn (Cố định, Phát sinh...)
+                        groupName = t.parent_name; 
                     } else {
-                        groupName = t.category_name; // Đã chọn nhóm lớn -> Gom theo nhóm nhỏ (Hóa đơn, Ăn uống...)
+                        groupName = t.category_name; 
                     }
                 }
                 if(!grouped[groupName]) grouped[groupName] = { total: 0, items: [] };
@@ -335,7 +348,6 @@ $userId = $_SESSION['user_id'];
                 grouped[groupName].total += t.rawAmount;
             });
 
-            // Vẽ HTML
             let html = '';
             for(const [gName, gData] of Object.entries(grouped)) {
                 const isInc = currentMainTab === 'income';
@@ -349,13 +361,13 @@ $userId = $_SESSION['user_id'];
 
                 gData.items.forEach(t => {
                     const icon = isInc ? 'bi-arrow-down-left-circle' : 'bi-arrow-up-right-circle';
-                    const catColor = window.getCategoryColor ? window.getCategoryColor(t.category_name) : '#6c757d';
+                    const catColor = window.getCategoryColor ? window.getCategoryColor(t.category_name) : '#0d6efd';
                     
                     html += `
                     <div class="card transaction-card rounded-4 bg-white mb-2" onclick="openEditModal(${t.id})">
                         <div class="card-body p-3 d-flex justify-content-between align-items-center">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px; background-color: ${catColor}26; color: ${catColor};">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px; background-color: ${catColor}15; color: ${catColor}; border: 1px solid ${catColor}30;">
                                     <i class="bi ${icon} fs-5"></i>
                                 </div>
                                 <div>
@@ -371,29 +383,13 @@ $userId = $_SESSION['user_id'];
                                     ${window.readVietnameseNumber ? window.readVietnameseNumber(t.rawAmount) : ''}
                                 </div>
                                 
-                                <button onclick="event.stopPropagation(); deleteTransaction(${t.id})" class="btn btn-sm text-danger opacity-50 border-0 p-0 hover-opacity-100"><i class="bi bi-trash fs-5"></i></button>
+                                <button onclick="event.stopPropagation(); deleteTransaction(${t.id})" class="btn btn-sm text-danger opacity-50 border-0 p-0 hover-opacity-100" title="Xóa giao dịch"><i class="bi bi-trash fs-5"></i></button>
                             </div>
                         </div>
                     </div>`;
                 });
             }
             container.innerHTML = html;
-        }
-
-        // 6. XỬ LÝ MODAL (Sửa, Xóa)
-        async function openEditModal(id) {
-            const res = await fetch(`../../controllers/TransactionController.php?action=get&id=${id}`);
-            const result = await res.json();
-            if(result.status) {
-                document.getElementById('editTransactionId').value = result.data.id;
-                const amountValue = result.data.amount.split('.')[0];
-                editAmountInput.value = window.formatNumberInput(amountValue);
-                editHiddenAmount.value = amountValue;
-                document.getElementById('editCategoryId').value = result.data.category_id;
-                document.getElementById('editTransactionDate').value = result.data.transaction_date; 
-                document.getElementById('editNote').value = result.data.note;
-                editTransModal.show();
-            }
         }
 
         document.getElementById('editTransactionForm').addEventListener('submit', async (e) => {
@@ -405,7 +401,7 @@ $userId = $_SESSION['user_id'];
         });
 
         async function deleteTransaction(id) {
-            if(confirm('Bạn có chắc muốn xóa giao dịch này?')) {
+            if(confirm('Bạn có chắc muốn xóa giao dịch này? Hệ thống sẽ cập nhật lại toàn bộ báo cáo và ngân sách.')) {
                 const fd = new FormData(); fd.append('action', 'delete'); fd.append('id', id);
                 const res = await fetch('../../controllers/TransactionController.php', { method: 'POST', body: fd });
                 const result = await res.json();

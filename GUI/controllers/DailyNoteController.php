@@ -1,6 +1,4 @@
 <?php
-// Tệp: GUI/controllers/DailyNoteController.php
-
 session_start();
 require_once __DIR__ . '/../../autoload.php';
 
@@ -11,14 +9,14 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-$userId = $_SESSION['user_id'];
+$userId = (int) $_SESSION['user_id'];
 $dailyNoteBUS = new DailyNoteBUS(); 
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 
 if ($action === 'save') {
-    $date = $_POST['date'] ?? '';
+    $date    = $_POST['date'] ?? '';
     $content = $_POST['content'] ?? '';
-    $pinType = $_POST['pin_type'] ?? 'none'; // Nhận thêm loại ghim
+    $pinType = $_POST['pin_type'] ?? 'none'; 
     
     if (empty($date)) {
         echo json_encode(['status' => false, 'message' => 'Không xác định được ngày.']);
@@ -28,14 +26,15 @@ if ($action === 'save') {
     $result = $dailyNoteBUS->saveOrDeleteNote($userId, $date, $content, $pinType);
     echo json_encode($result);
     exit();
-}
-
-if ($action === 'get_all_month') {
+} 
+elseif ($action === 'get_all_month') {
     $month = $_GET['month'] ?? date('Y-m');
-    $data = $dailyNoteBUS->getNotesByMonth($userId, $month);
+    $data  = $dailyNoteBUS->getNotesByMonth($userId, $month);
+    
     echo json_encode(['status' => true, 'data' => $data]);
     exit();
 }
 
 echo json_encode(['status' => false, 'message' => 'Hành động không hợp lệ.']);
+exit();
 ?>

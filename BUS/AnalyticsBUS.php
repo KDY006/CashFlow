@@ -4,6 +4,7 @@
  */
 
 require_once __DIR__ . '/../DAL/AnalyticsDAL.php';
+require_once __DIR__ . '/../DAL/BudgetDAL.php';
 require_once __DIR__ . '/../helpers/FormatHelper.php';
 
 class AnalyticsBUS
@@ -20,11 +21,8 @@ class AnalyticsBUS
         if (empty($month)) $month = date('Y-m'); 
         $prev_month = date('Y-m', strtotime($month . '-01 -1 month'));
 
-        // 1. Kéo dữ liệu Lịch từ AnalyticsDAL vừa viết
-        $analyticsDal = new AnalyticsDAL();
-        $calendar_data = $analyticsDal->getCalendarData($user_id, $month);
-        
-        // 2. Kéo dữ liệu Sức khỏe hũ từ hàm helper vừa viết
+        // Sử dụng $this->dal thay vì khởi tạo mới
+        $calendar_data = $this->dal->getCalendarData($user_id, $month);
         $budget_health = $this->getBudgetHealth($user_id, $month);
 
         return [
@@ -34,8 +32,8 @@ class AnalyticsBUS
             'top_categories' => $this->getTopCategories($user_id, $month),
             'mom_comparison' => $this->getMoMComparison($user_id, $month, $prev_month),
             'alerts'         => $this->generateAlerts($user_id, $month),
-            'calendar_data' => $calendar_data,
-            'budget_health' => $budget_health
+            'calendar_data'  => $calendar_data,
+            'budget_health'  => $budget_health
         ];
     }
 
@@ -54,7 +52,6 @@ class AnalyticsBUS
             'net_balance'       => $balance,
             'transaction_count' => $count,
             'formatted'         => [
-                // ĐÃ SỬA LỖI TÊN HÀM Ở ĐÂY
                 'total_income'  => FormatHelper::formatCurrency($income),
                 'total_expense' => FormatHelper::formatCurrency($expense),
                 'net_balance'   => FormatHelper::formatCurrency($balance),
@@ -69,7 +66,6 @@ class AnalyticsBUS
         $total = array_sum(array_column($raw, 'total'));
 
         $palette = ['#5DCAA5', '#378ADD', '#EF9F27', '#D4537E', '#7F77DD', '#D85A30', '#639922', '#E24B4A', '#888780', '#3B8BD4'];
-
         $labels = []; $data = []; $percentages = []; $formatted = []; $colors = [];
 
         foreach ($raw as $i => $row) {
@@ -79,14 +75,14 @@ class AnalyticsBUS
             $labels[]      = $row['category_name'];
             $data[]        = $amount;
             $percentages[] = $percent;
-            $formatted[]   = FormatHelper::formatCurrency($amount); // ĐÃ SỬA TÊN HÀM
+            $formatted[]   = FormatHelper::formatCurrency($amount);
             $colors[]      = $palette[$i % count($palette)];
         }
 
         return [
             'labels' => $labels, 'data' => $data, 'percentages' => $percentages,
             'formatted' => $formatted, 'colors' => $colors, 'total' => $total,
-            'total_formatted' => FormatHelper::formatCurrency($total), // ĐÃ SỬA TÊN HÀM
+            'total_formatted' => FormatHelper::formatCurrency($total),
         ];
     }
 
@@ -116,11 +112,13 @@ class AnalyticsBUS
     {
         $raw = $this->dal->getWeeklyCashFlow($user_id, $year, $month);
         $indexed = [];
-        foreach ($raw as $row) { $indexed[(int)$row['week']][$row['type']] = (float) $row['total']; }
+        foreach ($raw as $row) { 
+            $indexed[(int)$row['week']][$row['type']] = (float) $row['total']; 
+        }
 
         $weeks = array_keys($indexed); $labels = []; $income = []; $expense = []; $balance = [];
-
         $weekNum = 1;
+        
         foreach ($weeks as $w) {
             $labels[]  = 'Tuần ' . $weekNum++;
             $inc = $indexed[$w]['income']  ?? 0;
@@ -141,8 +139,9 @@ class AnalyticsBUS
             $amount  = (float) $row['total'];
             $percent = $total_expense > 0 ? round(($amount / $total_expense) * 100, 1) : 0;
             $result[] = [
-                'category_name' => $row['category_name'], 'total' => $amount,
-                'formatted'     => FormatHelper::formatCurrency($amount), // ĐÃ SỬA TÊN HÀM
+                'category_name' => $row['category_name'], 
+                'total'         => $amount,
+                'formatted'     => FormatHelper::formatCurrency($amount),
                 'percent'       => $percent,
             ];
         }
@@ -153,20 +152,28 @@ class AnalyticsBUS
     {
         $raw = $this->dal->getMonthOverMonthComparison($user_id, $current_month, $previous_month);
         $indexed = [];
-        foreach ($raw as $row) { $indexed[$row['period']][$row['type']] = (float) $row['total']; }
+        foreach ($raw as $row) { 
+            $indexed[$row['period']][$row['type']] = (float) $row['total']; 
+        }
 
         $result = [];
         foreach (['income', 'expense'] as $type) {
             $cur  = $indexed[$current_month][$type]  ?? 0;
             $prev = $indexed[$previous_month][$type] ?? 0;
 
-            if ($prev > 0) { $change = round((($cur - $prev) / $prev) * 100, 1); } 
-            elseif ($cur > 0) { $change = 100; } else { $change = 0; }
+            if ($prev > 0) { 
+                $change = round((($cur - $prev) / $prev) * 100, 1); 
+            } elseif ($cur > 0) { 
+                $change = 100; 
+            } else { 
+                $change = 0; 
+            }
 
             $result[$type] = [
-                'current'        => $cur, 'previous' => $prev,
-                'current_fmt'    => FormatHelper::formatCurrency($cur), // ĐÃ SỬA TÊN HÀM
-                'previous_fmt'   => FormatHelper::formatCurrency($prev), // ĐÃ SỬA TÊN HÀM
+                'current'        => $cur, 
+                'previous'       => $prev,
+                'current_fmt'    => FormatHelper::formatCurrency($cur),
+                'previous_fmt'   => FormatHelper::formatCurrency($prev),
                 'change_percent' => $change,
                 'trend'          => $change > 0 ? 'up' : ($change < 0 ? 'down' : 'same'),
             ];
@@ -177,7 +184,9 @@ class AnalyticsBUS
     public function generateAlerts(int $user_id, string $month): array
     {
         $stats   = $this->getCurrentMonthStats($user_id, $month);
-        $income  = $stats['total_income']; $expense = $stats['total_expense']; $alerts  = [];
+        $income  = $stats['total_income']; 
+        $expense = $stats['total_expense']; 
+        $alerts  = [];
 
         if ($income === 0.0 && $expense === 0.0) return [];
 
@@ -199,7 +208,7 @@ class AnalyticsBUS
 
         $transactions = array_map(function ($row) {
             $row['amount_formatted'] = FormatHelper::formatCurrency((float) $row['amount']);
-            $row['date_formatted']   = date('d/m/Y', strtotime($row['transaction_date'])); // ĐÃ SỬA THÀNH DATE CHUẨN
+            $row['date_formatted']   = date('d/m/Y', strtotime($row['transaction_date']));
             return $row;
         }, $result['data']);
 
@@ -208,7 +217,10 @@ class AnalyticsBUS
 
         $cash_flow_raw = $this->dal->getCashFlowSummary($user_id, $from, $to);
         $summary = ['income' => 0, 'expense' => 0, 'net' => 0];
-        foreach ($cash_flow_raw as $row) { $summary[$row['type']] = (float) $row['total']; }
+        
+        foreach ($cash_flow_raw as $row) { 
+            $summary[$row['type']] = (float) $row['total']; 
+        }
         
         $summary['net']         = $summary['income'] - $summary['expense'];
         $summary['income_fmt']  = FormatHelper::formatCurrency($summary['income']);
@@ -218,24 +230,19 @@ class AnalyticsBUS
         $total_pages = (int) ceil($result['total'] / $per_page);
 
         return [
-            'transactions' => $transactions, 'summary' => $summary,
+            'transactions' => $transactions, 
+            'summary'      => $summary,
             'pagination'   => ['current_page' => $page, 'total_pages' => max(1, $total_pages), 'total' => $result['total'], 'per_page' => $per_page]
         ];
     }
 
-    // ==========================================
-    // LẤY SỨC KHỎE NGÂN SÁCH TỪ BUDGET_DAL
-    // ==========================================
     private function getBudgetHealth(int $userId, string $monthStr): array
     {
         $budgetDal = new BudgetDAL();
-        
-        // Cắt chuỗi '2026-05' thành năm và tháng
         $parts = explode('-', $monthStr);
         $year = (int)$parts[0];
         $month = (int)$parts[1];
         
-        // Gọi hàm đã có sẵn bên BudgetDAL
         $budgets = $budgetDal->getBudgetsByMonth($userId, $month, $year);
         $healthData = [];
         
@@ -253,15 +260,14 @@ class AnalyticsBUS
 
     public function getCalendarOnly(int $user_id, string $month): array
     {
-        // Khởi tạo trực tiếp DAL để tránh lỗi null property
-        $analyticsDal = new AnalyticsDAL();
-        return $analyticsDal->getCalendarData($user_id, $month);
+        // Tối ưu: Dùng biến lớp
+        return $this->dal->getCalendarData($user_id, $month);
     }
 
     public function getDailyTransactions(int $user_id, string $date): array
     {
-        $analyticsDal = new AnalyticsDAL();
-        return $analyticsDal->getDailyTransactions($user_id, $date);
+        // Tối ưu: Dùng biến lớp
+        return $this->dal->getDailyTransactions($user_id, $date);
     }
 
     // ==========================================
@@ -269,52 +275,53 @@ class AnalyticsBUS
     // ==========================================
     public function getDashboardV2Data(int $userId, string $filterType, string $filterVal): array
     {
-        $analyticsDal = new AnalyticsDAL();
-        $stats = $analyticsDal->getDashboardV2Stats($userId, $filterType, $filterVal);
+        // Tối ưu: Sử dụng $this->dal thay vì new AnalyticsDAL()
+        $stats = $this->dal->getDashboardV2Stats($userId, $filterType, $filterVal);
         
-        $total_income = (float)($stats['total_income'] ?? 0);
+        $total_income  = (float)($stats['total_income'] ?? 0);
         $total_expense = (float)($stats['total_expense'] ?? 0);
 
-        // Hàm helper tính %
         $formatList = function($dataList, $totalAmount) {
             $result = [];
             foreach ($dataList as $row) {
                 $amt = (float)$row['total'];
                 $pct = $totalAmount > 0 ? round(($amt / $totalAmount) * 100, 1) : 0;
                 $result[] = [
-                    'name' => $row['category_name'],
-                    'amount' => $amt,
+                    'name'       => $row['category_name'],
+                    'amount'     => $amt,
                     'amount_fmt' => FormatHelper::formatCurrency($amt),
-                    'percent' => $pct
+                    'percent'    => $pct
                 ];
             }
             return $result;
         };
 
-        $expense_parent = $formatList($analyticsDal->getExpenseByParentV2($userId, $filterType, $filterVal), $total_expense);
-        $expense_child = $formatList($analyticsDal->getExpenseByChildV2($userId, $filterType, $filterVal), $total_expense);
-        $income_list = $formatList($analyticsDal->getIncomeV2($userId, $filterType, $filterVal), $total_income);
+        $expense_parent = $formatList($this->dal->getExpenseByParentV2($userId, $filterType, $filterVal), $total_expense);
+        $expense_child  = $formatList($this->dal->getExpenseByChildV2($userId, $filterType, $filterVal), $total_expense);
+        $income_list    = $formatList($this->dal->getIncomeV2($userId, $filterType, $filterVal), $total_income);
 
-        // Lấy Ngân sách (Chỉ lấy theo tháng. Nếu xem Tuần/Năm thì mặc định lấy tháng hiện tại hoặc tháng của bộ lọc)
-        $b_year = (int)date('Y'); $b_month = (int)date('m');
+        $b_year = (int)date('Y'); 
+        $b_month = (int)date('m');
+        
         if ($filterType === 'month') {
             $parts = explode('-', $filterVal);
-            $b_year = (int)$parts[0]; $b_month = (int)$parts[1];
+            $b_year = (int)$parts[0]; 
+            $b_month = (int)$parts[1];
         }
         
         $budgetDal = new BudgetDAL();
         $budgetsRaw = $budgetDal->getBudgetsByMonth($userId, $b_month, $b_year);
         $budgets = [];
+        
         foreach ($budgetsRaw as $b) {
             $budgets[] = [
-                'name' => $b->getCategoryName(),
-                'limit' => $b->getAmountLimit(),
-                'spent' => $b->getTotalSpent(),
-                'percent' => $b->getProgressPercentage(),
+                'name'       => $b->getCategoryName(),
+                'limit'      => $b->getAmountLimit(),
+                'spent'      => $b->getTotalSpent(),
+                'percent'    => $b->getProgressPercentage(),
                 'remain_fmt' => FormatHelper::formatCurrency(abs($b->getAmountLimit() - $b->getTotalSpent()))
             ];
         }
-        // Sắp xếp hũ ngân sách: Hũ nào % tiêu nhiều nhất lên đầu
         usort($budgets, fn($a, $b) => $b['percent'] <=> $a['percent']);
 
         $historicalPeriods = [];
@@ -331,7 +338,6 @@ class AnalyticsBUS
             $currM = (int)$parts[1];
             $currW = (int)$parts[2];
             
-            // Hàm Helper tính toán nhanh Tháng đó có bao nhiêu Tuần (4, 5 hay 6 tuần)
             $getMaxWeeks = function($y, $m) {
                 $firstDayStr = sprintf('%04d-%02d-01', $y, $m);
                 $lastDay = (int)date('t', strtotime($firstDayStr));
@@ -339,7 +345,6 @@ class AnalyticsBUS
                 return ceil(($lastDay + $startOffset) / 7);
             };
 
-            // Dịch chuyển tiến/lùi 12 tuần (Cộng trừ đại số)
             for ($i = -5; $i <= 6; $i++) {
                 $y = $currY; $m = $currM; $w = $currW;
                 
@@ -347,8 +352,9 @@ class AnalyticsBUS
                     $steps = abs($i);
                     while ($steps > 0) {
                         $w--;
-                        if ($w < 1) { // Lùi về tháng trước
-                            $m--; if ($m < 1) { $m = 12; $y--; }
+                        if ($w < 1) { 
+                            $m--; 
+                            if ($m < 1) { $m = 12; $y--; }
                             $w = $getMaxWeeks($y, $m);
                         }
                         $steps--;
@@ -358,8 +364,9 @@ class AnalyticsBUS
                     while ($steps > 0) {
                         $w++;
                         $maxW = $getMaxWeeks($y, $m);
-                        if ($w > $maxW) { // Tiến lên tháng sau
-                            $w = 1; $m++; if ($m > 12) { $m = 1; $y++; }
+                        if ($w > $maxW) { 
+                            $w = 1; $m++; 
+                            if ($m > 12) { $m = 1; $y++; }
                         }
                         $steps--;
                     }
@@ -369,54 +376,42 @@ class AnalyticsBUS
                 $firstDayStr = sprintf('%04d-%02d-01', $y, $m);
                 $historicalPeriods[] = [
                     'label' => "T$w/Th$padM",
-                    'sql' => "YEAR(t.transaction_date) = $y AND MONTH(t.transaction_date) = $m AND CEIL((DAY(t.transaction_date) + WEEKDAY('$firstDayStr')) / 7) = $w"
+                    'sql'   => "YEAR(t.transaction_date) = $y AND MONTH(t.transaction_date) = $m AND CEIL((DAY(t.transaction_date) + WEEKDAY('$firstDayStr')) / 7) = $w"
                 ];
             }
-        } else { // filterType === month
+        } else {
             $parts = explode('-', $filterVal);
             $currY = (int)$parts[0];
             $currM = (int)$parts[1];
             
             for ($i = -5; $i <= 6; $i++) {
                 $time = strtotime(sprintf('%04d-%02d-01', $currY, $currM) . " $i months");
-                $y = date('Y', $time); $m = date('n', $time);
+                $y = date('Y', $time); 
+                $m = date('n', $time);
                 $padM = str_pad($m, 2, '0', STR_PAD_LEFT);
                 $historicalPeriods[] = [
                     'label' => "Th$padM/$y", 
-                    'sql' => "YEAR(t.transaction_date) = $y AND MONTH(t.transaction_date) = $m"
+                    'sql'   => "YEAR(t.transaction_date) = $y AND MONTH(t.transaction_date) = $m"
                 ];
             }
         }
 
-        // Đảm bảo Hũ Ngân sách luôn load theo đúng Tháng được chọn (kể cả khi xem theo tuần)
-        if ($filterType === 'month' || $filterType === 'week') {
-            $parts = explode('-', $filterVal);
-            $b_year = (int)$parts[0]; 
-            $b_month = (int)$parts[1];
-        } else {
-            $b_year = (int)$filterVal;
-            $b_month = (int)date('m');
-        }
-
-        $analyticsDal = new AnalyticsDAL();
-        $history = $analyticsDal->getHistoricalData($userId, $historicalPeriods);
-
-        // Tính chênh lệch cho overview
+        $history = $this->dal->getHistoricalData($userId, $historicalPeriods);
         $net_cashflow = $total_income - $total_expense;
 
         return [
             'overview' => [
-                'total_expense' => $total_expense,
+                'total_expense'     => $total_expense,
                 'total_expense_fmt' => FormatHelper::formatCurrency($total_expense),
-                'total_income' => $total_income,
-                'total_income_fmt' => FormatHelper::formatCurrency($total_income),
-                'net_cashflow' => $net_cashflow,
-                'net_cashflow_fmt' => FormatHelper::formatCurrency(abs($net_cashflow)),
+                'total_income'      => $total_income,
+                'total_income_fmt'  => FormatHelper::formatCurrency($total_income),
+                'net_cashflow'      => $net_cashflow,
+                'net_cashflow_fmt'  => FormatHelper::formatCurrency(abs($net_cashflow)),
             ],
             'history_chart' => $history,
-            'expense' => ['parent' => $expense_parent, 'child' => $expense_child],
-            'income' => $income_list,
-            'budgets' => $budgets
+            'expense'       => ['parent' => $expense_parent, 'child' => $expense_child],
+            'income'        => $income_list,
+            'budgets'       => $budgets
         ];
     }
 }

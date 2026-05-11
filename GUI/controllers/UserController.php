@@ -1,5 +1,4 @@
 <?php
-// Tệp: GUI/controllers/UserController.php
 session_start();
 require_once __DIR__ . '/../../autoload.php';
 
@@ -10,17 +9,16 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-$userId = $_SESSION['user_id'];
+$userId  = (int) $_SESSION['user_id'];
 $userBUS = new UserBUS();
-$action = $_POST['action'] ?? '';
+$action  = $_POST['action'] ?? '';
 
 try {
     // 1. CẬP NHẬT THÔNG TIN CÁ NHÂN
     if ($action === 'update_profile') {
-        $fullName = trim($_POST['full_name'] ?? '');
+        $fullName  = trim($_POST['full_name'] ?? '');
         $avatarUrl = $_POST['current_avatar_url'] ?? null;
 
-        // Xử lý upload ảnh
         if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
             $file = $_FILES['avatar'];
             $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
@@ -31,24 +29,21 @@ try {
             }
 
             $uploadDir = __DIR__ . '/../assets/images/avatars/';
-            
-            // Dùng @ để bỏ qua Warning nếu thư mục đã tồn tại
             if (!is_dir($uploadDir)) {
-                @mkdir($uploadDir, 0755, true);
+                @mkdir($uploadDir, 0777, true);
             }
+            
+            $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+            $newFileName = 'avatar_' . uniqid() . '_' . time() . '.' . $ext;
+            $destination = $uploadDir . $newFileName;
 
-            $filename = uniqid('avatar_') . '_' . time() . '.' . pathinfo($file['name'], PATHINFO_EXTENSION);
-            $targetFile = $uploadDir . $filename;
-
-            // Dùng @ để bỏ qua Warning nếu lỗi phân quyền ghi file
-            if (@move_uploaded_file($file['tmp_name'], $targetFile)) {
-                // Xóa file cũ
-                if ($avatarUrl && file_exists(__DIR__ . '/..' . $avatarUrl)) {
-                    @unlink(__DIR__ . '/..' . $avatarUrl);
+            if (move_uploaded_file($file['tmp_name'], $destination)) {
+                if ($avatarUrl && file_exists($uploadDir . $avatarUrl)) {
+                    @unlink($uploadDir . $avatarUrl);
                 }
-                $avatarUrl = '/assets/images/avatars/' . $filename;
+                $avatarUrl = $newFileName;
             } else {
-                echo json_encode(['status' => false, 'message' => 'Lưu file ảnh thất bại. Kiểm tra quyền thư mục assets/images.']);
+                echo json_encode(['status' => false, 'message' => 'Lưu file ảnh thất bại.']);
                 exit();
             }
         }
@@ -62,11 +57,11 @@ try {
         echo json_encode($result);
         exit();
     }
-
+    
     // 2. ĐỔI MẬT KHẨU
-    if ($action === 'change_password') {
-        $oldPassword = $_POST['old_password'] ?? '';
-        $newPassword = $_POST['new_password'] ?? '';
+    elseif ($action === 'change_password') {
+        $oldPassword     = $_POST['old_password'] ?? '';
+        $newPassword     = $_POST['new_password'] ?? '';
         $confirmPassword = $_POST['confirm_password'] ?? '';
 
         if ($newPassword !== $confirmPassword) {
@@ -87,9 +82,7 @@ try {
     echo json_encode(['status' => false, 'message' => 'Hành động không hợp lệ.']);
 
 } catch (Exception $e) {
-    echo json_encode(['status' => false, 'message' => 'Lỗi ngoại lệ: ' . $e->getMessage()]);
-} catch (Error $e) {
-    // Bắt các lỗi Fatal Error (Như sai số lượng tham số hàm)
-    echo json_encode(['status' => false, 'message' => 'Lỗi cấu trúc: ' . $e->getMessage()]);
+    echo json_encode(['status' => false, 'message' => 'Đã xảy ra lỗi hệ thống: ' . $e->getMessage()]);
 }
+exit();
 ?>

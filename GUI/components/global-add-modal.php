@@ -87,19 +87,16 @@
                             <div class="ai-icon-wrapper">
                                 <i class="bi bi-robot text-primary" style="font-size: 2.8rem;"></i>
                             </div>
-                            <h5 class="fw-bold text-dark mb-1">Trợ lý nhập liệu AI</h5>
+                            <h5 class="fw-bold text-dark mb-1">Tự động nhận diện giao dịch</h5>
                             <p class="text-muted small px-2 mb-0">Viết tự do điều bạn vừa chi tiêu, AI sẽ tự động hiểu và ghi chép thay bạn.</p>
                         </div>
                         
                         <div class="mb-4 position-relative">
                             <textarea id="aiTransactionInput" class="form-control form-control-lg ai-textarea bg-light p-3" rows="3" placeholder="Ví dụ: Đổ xăng 60k, ăn sáng phở cuốn 45k..."></textarea>
-                            <div class="position-absolute" style="bottom: 15px; right: 15px;" title="Cập nhật sau">
-                                <div class="bg-white rounded-circle shadow-sm d-flex align-items-center justify-content-center text-primary opacity-50" style="width: 32px; height: 32px;"><i class="bi bi-mic-fill"></i></div>
-                            </div>
                         </div>
                         
                         <button type="button" id="btnAiParse" onclick="parseAiTransaction()" class="btn btn-primary btn-lg w-100 rounded-pill shadow-sm fw-bold">
-                            <i class="bi bi-magic me-2"></i>Trích xuất & Thêm nhanh
+                            <i class="bi bi-magic me-2"></i>Thêm giao dịch
                         </button>
                     </div>
 

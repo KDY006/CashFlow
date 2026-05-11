@@ -341,7 +341,7 @@ require_once __DIR__ . '/../../../autoload.php';
                 type: 'doughnut',
                 data: { labels: labels, datasets: [{ data: dataPts, backgroundColor: colors, borderWidth: 2 }] },
                 options: { 
-                    responsive: true, maintainAspectRatio: false, cutout: '75%', 
+                    responsive: true, maintainAspectRatio: false, cutout: '0%', 
                     plugins: { 
                         legend: { 
                             display: true, position: 'right', labels: { font: { family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", size: 12 } }

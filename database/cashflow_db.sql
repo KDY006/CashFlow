@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 10, 2026 at 06:10 PM
+-- Generation Time: May 11, 2026 at 11:39 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -30,7 +30,7 @@ SET time_zone = "+00:00";
 CREATE TABLE `ai_insights` (
   `id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
-  `type` enum('anomaly','forecast','advice','summary','warning') NOT NULL,
+  `type` enum('warning','advice','forecast','summary') NOT NULL,
   `content` text NOT NULL,
   `is_read` tinyint(1) DEFAULT 0,
   `created_at` datetime DEFAULT current_timestamp()
@@ -41,19 +41,19 @@ CREATE TABLE `ai_insights` (
 --
 
 INSERT INTO `ai_insights` (`id`, `user_id`, `type`, `content`, `is_read`, `created_at`) VALUES
-(1, 1, 'anomaly', 'Tháng này bạn đã chi ra tổng cộng 353.000 VNĐ. Chú ý: Mục \'Đi chơi với bồ\' đang chiếm nhiều nhất với 235.000 VNĐ.', 1, '2026-04-29 01:10:14'),
+(1, 1, 'warning', 'Tháng này bạn đã chi ra tổng cộng 353.000 VNĐ. Chú ý: Mục \'Đi chơi với bồ\' đang chiếm nhiều nhất với 235.000 VNĐ.', 1, '2026-04-29 01:10:14'),
 (2, 1, 'advice', 'Lời khuyên: Bạn nên xem xét lại các khoản chi trong nhóm \'Đi chơi với bồ\'. Nếu cắt giảm được 15% ở nhóm này, bạn sẽ có thêm quỹ dự phòng cho tháng sau.', 1, '2026-04-29 01:10:14'),
-(3, 1, 'anomaly', 'Tháng này bạn đã chi ra tổng cộng 353.000 VNĐ. Chú ý: Mục \'Đi chơi với bồ\' đang chiếm nhiều nhất với 235.000 VNĐ.', 1, '2026-04-29 01:10:20'),
+(3, 1, 'warning', 'Tháng này bạn đã chi ra tổng cộng 353.000 VNĐ. Chú ý: Mục \'Đi chơi với bồ\' đang chiếm nhiều nhất với 235.000 VNĐ.', 1, '2026-04-29 01:10:20'),
 (4, 1, 'advice', 'Lời khuyên: Bạn nên xem xét lại các khoản chi trong nhóm \'Đi chơi với bồ\'. Nếu cắt giảm được 15% ở nhóm này, bạn sẽ có thêm quỹ dự phòng cho tháng sau.', 1, '2026-04-29 01:10:20'),
 (5, 1, 'advice', 'Hệ thống nhận thấy bạn chi khá nhiều cho mục \"Uống nước\" và cà phê. Bạn có thể cân nhắc việc tự pha chế ở nhà để tiết kiệm quỹ tiền mặt nhé.', 1, '2026-04-28 09:00:00'),
 (7, 1, 'forecast', 'Với tiến độ chi tiêu hiện tại và khoản thu nhập thêm từ Freelance, dự kiến bạn sẽ kết thúc tháng 4/2026 với số dư khả dụng khoảng 3.200.000đ. Giữ vững phong độ nhé!', 1, '2026-04-29 11:30:00'),
-(8, 1, 'anomaly', 'Tháng này bạn đã chi ra tổng cộng 998.000 VNĐ. Chú ý: Mục \'Mua sắm\' đang chiếm nhiều nhất với 450.000 VNĐ.', 1, '2026-04-29 07:43:33'),
+(8, 1, 'warning', 'Tháng này bạn đã chi ra tổng cộng 998.000 VNĐ. Chú ý: Mục \'Mua sắm\' đang chiếm nhiều nhất với 450.000 VNĐ.', 1, '2026-04-29 07:43:33'),
 (9, 1, 'advice', 'Lời khuyên: Bạn nên xem xét lại các khoản chi trong nhóm \'Mua sắm\'. Nếu cắt giảm được 15% ở nhóm này, bạn sẽ có thêm quỹ dự phòng cho tháng sau.', 1, '2026-04-29 07:43:33'),
-(10, 1, 'anomaly', 'Hệ thống AI đang quá tải hoặc cấu hình API Key chưa đúng. Vui lòng thử lại sau.', 1, '2026-04-29 07:51:46'),
-(11, 1, 'anomaly', 'Hệ thống AI đang quá tải hoặc cấu hình API Key chưa đúng. Vui lòng thử lại sau.', 1, '2026-04-29 07:51:59'),
-(12, 1, 'anomaly', 'Hệ thống AI đang quá tải hoặc cấu hình API Key chưa đúng. Vui lòng thử lại sau.', 1, '2026-04-29 07:54:05'),
-(13, 1, 'anomaly', 'Hệ thống AI đang quá tải hoặc cấu hình API Key chưa đúng. Vui lòng thử lại sau.', 1, '2026-04-29 07:54:20'),
-(14, 1, 'anomaly', 'Bạn đang có một tỷ lệ tiết kiệm rất ấn tượng, lên đến hơn 80% thu nhập! Đây là một thành tích tuyệt vời, tuy nhiên, hãy cùng xem lại một chút liệu mình đã ghi nhận đầy đủ tất cả các khoản chi tiêu nhỏ trong tháng chưa nhé, để đảm bảo bức tranh tài chính là hoàn chỉnh nhất.', 1, '2026-04-29 07:57:11'),
+(10, 1, 'warning', 'Hệ thống AI đang quá tải hoặc cấu hình API Key chưa đúng. Vui lòng thử lại sau.', 1, '2026-04-29 07:51:46'),
+(11, 1, 'warning', 'Hệ thống AI đang quá tải hoặc cấu hình API Key chưa đúng. Vui lòng thử lại sau.', 1, '2026-04-29 07:51:59'),
+(12, 1, 'warning', 'Hệ thống AI đang quá tải hoặc cấu hình API Key chưa đúng. Vui lòng thử lại sau.', 1, '2026-04-29 07:54:05'),
+(13, 1, 'warning', 'Hệ thống AI đang quá tải hoặc cấu hình API Key chưa đúng. Vui lòng thử lại sau.', 1, '2026-04-29 07:54:20'),
+(14, 1, 'warning', 'Bạn đang có một tỷ lệ tiết kiệm rất ấn tượng, lên đến hơn 80% thu nhập! Đây là một thành tích tuyệt vời, tuy nhiên, hãy cùng xem lại một chút liệu mình đã ghi nhận đầy đủ tất cả các khoản chi tiêu nhỏ trong tháng chưa nhé, để đảm bảo bức tranh tài chính là hoàn chỉnh nhất.', 1, '2026-04-29 07:57:11'),
 (15, 1, 'advice', 'Với khoản tiết kiệm lớn như vậy, bạn có thể nghĩ đến việc bắt đầu xây dựng một quỹ khẩn cấp hoặc đầu tư nhỏ để tiền của mình \'làm việc\' hiệu quả hơn. Đây là thời điểm tốt để đặt ra các mục tiêu tài chính dài hạn!', 1, '2026-04-29 07:57:11'),
 (16, 1, 'forecast', 'Nếu bạn duy trì được mức tiết kiệm này, bạn sẽ nhanh chóng đạt được các mục tiêu tài chính lớn như mua nhà, xe, hoặc nghỉ hưu sớm. Tương lai tài chính của bạn đang rất sáng sủa!', 1, '2026-04-29 07:57:11'),
 (18, 1, 'advice', 'Bạn đang quản lý tài chính rất xuất sắc với tỷ lệ tiết kiệm ấn tượng gần 70% tổng thu nhập! Để tối ưu hơn nữa, bạn có thể thử chuyển một phần nhỏ từ khoản \'Uống nước\' sang các khoản đầu tư nhỏ hoặc xây dựng quỹ khẩn cấp để tiền của bạn \'làm việc\' hiệu quả hơn nhé.', 0, '2026-04-29 09:06:41'),
@@ -62,19 +62,21 @@ INSERT INTO `ai_insights` (`id`, `user_id`, `type`, `content`, `is_read`, `creat
 (26, 1, 'forecast', 'Nếu bạn tiếp tục duy trì thói quen chi tiêu hợp lý và tiết kiệm tốt như vậy, bạn sẽ sớm xây dựng được một nền tảng tài chính vững vàng, giúp bạn thực hiện được nhiều dự định lớn trong tương lai.', 1, '2026-04-29 14:41:54'),
 (35, 1, 'advice', 'Với số tiền tiết kiệm lên đến 3.602.000 VNĐ (khoảng 69% tổng thu nhập), bạn đang có một nền tảng tài chính cực kỳ vững chắc! Đây là thời điểm tuyệt vời để bạn bắt đầu xây dựng quỹ khẩn cấp hoặc tìm hiểu các kênh đầu tư nhỏ để tiền của bạn sinh lời thêm.', 1, '2026-04-29 23:58:36'),
 (36, 1, 'forecast', 'Nếu bạn tiếp tục duy trì được thói quen chi tiêu hợp lý và tiết kiệm hiệu quả như hiện tại, mình tin rằng bạn sẽ tích lũy được một khoản đáng kể trong vài tháng tới, giúp bạn tự tin hơn để thực hiện các mục tiêu tài chính lớn hơn trong tương lai.', 1, '2026-04-29 23:58:36'),
-(41, 1, 'anomaly', 'Chào bạn! Nhìn vào chi tiêu tháng này, mình thấy khoản \'Uống nước\' lên đến 710,000 VNĐ là khá cao so với tổng chi tiêu (chiếm gần một nửa đó). Đây là một khoản chi đáng để bạn xem xét kỹ hơn, liệu có cách nào để tiết kiệm hơn ở hạng mục này không nhé?', 1, '2026-04-30 00:06:50'),
+(41, 1, 'warning', 'Chào bạn! Nhìn vào chi tiêu tháng này, mình thấy khoản \'Uống nước\' lên đến 710,000 VNĐ là khá cao so với tổng chi tiêu (chiếm gần một nửa đó). Đây là một khoản chi đáng để bạn xem xét kỹ hơn, liệu có cách nào để tiết kiệm hơn ở hạng mục này không nhé?', 1, '2026-04-30 00:06:50'),
 (42, 1, 'advice', 'Bạn đang có một khoản tiết kiệm rất ấn tượng, lên đến 3,602,000 VNĐ, chiếm gần 70% tổng thu nhập! Đây là một thành tích tuyệt vời. Với số tiền này, bạn có thể bắt đầu nghĩ đến việc lập một quỹ khẩn cấp vững chắc hoặc đầu tư để tiền của bạn \'làm việc\' hiệu quả hơn nữa nhé.', 0, '2026-04-30 00:06:50'),
 (43, 1, 'forecast', 'Nếu bạn tiếp tục duy trì được thói quen chi tiêu hợp lý và tiết kiệm hiệu quả như thế này, mình tin rằng bạn sẽ nhanh chóng đạt được các mục tiêu tài chính cá nhân và xây dựng được một nền tảng tài chính vững vàng cho tương lai!', 0, '2026-04-30 00:06:50'),
-(44, 1, 'anomaly', 'Chào bạn! Nhìn vào số liệu, có vẻ như tháng này bạn đang chi tiêu vượt quá thu nhập khá nhiều, với mức thâm hụt lên tới hơn 6 triệu đồng. Đặc biệt, khoản \'Khác\' chiếm đến 10 triệu đồng là một con số rất lớn, cần được xem xét kỹ lưỡng đó nhé.', 0, '2026-04-30 00:26:44'),
+(44, 1, 'warning', 'Chào bạn! Nhìn vào số liệu, có vẻ như tháng này bạn đang chi tiêu vượt quá thu nhập khá nhiều, với mức thâm hụt lên tới hơn 6 triệu đồng. Đặc biệt, khoản \'Khác\' chiếm đến 10 triệu đồng là một con số rất lớn, cần được xem xét kỹ lưỡng đó nhé.', 0, '2026-04-30 00:26:44'),
 (45, 1, 'advice', 'Lời khuyên chân thành là bạn hãy thử dành thời gian phân loại rõ ràng hơn khoản \'Khác\' 10 triệu đồng này. Việc biết chính xác tiền của mình đi đâu sẽ giúp bạn dễ dàng tìm ra những mục có thể tiết kiệm hoặc cắt giảm, từ đó cân đối lại chi tiêu hiệu quả hơn.', 0, '2026-04-30 00:26:44'),
 (46, 1, 'forecast', 'Nếu tình hình chi tiêu vượt thu nhập như hiện tại tiếp diễn mà không có điều chỉnh, rất có thể bạn sẽ phải đối mặt với áp lực tài chính lớn, thậm chí là phát sinh nợ hoặc dần cạn kiệt các khoản dự phòng đấy. Nhưng đừng lo, chúng ta hoàn toàn có thể thay đổi được!', 0, '2026-04-30 00:26:44'),
-(54, 1, 'anomaly', 'Tháng này, điểm đáng lo ngại nhất là khoản chi 10,000,000 VNĐ do bị lừa. Đây là một con số rất lớn, khiến dòng tiền của bạn thâm hụt nghiêm trọng. Hãy cực kỳ cẩn trọng hơn với các giao dịch tài chính và thông tin cá nhân để tránh rủi ro tương tự trong tương lai nhé!', 0, '2026-04-30 01:04:54'),
+(54, 1, 'warning', 'Tháng này, điểm đáng lo ngại nhất là khoản chi 10,000,000 VNĐ do bị lừa. Đây là một con số rất lớn, khiến dòng tiền của bạn thâm hụt nghiêm trọng. Hãy cực kỳ cẩn trọng hơn với các giao dịch tài chính và thông tin cá nhân để tránh rủi ro tương tự trong tương lai nhé!', 0, '2026-04-30 01:04:54'),
 (55, 1, 'advice', 'Bên cạnh sự cố không mong muốn, mình thấy khoản chi \'Uống nước\' khá cao, đặc biệt là 600,000 VNĐ cho việc \'Bao công ty\'. Việc này tuy thể hiện sự hào phóng nhưng có thể cân nhắc lại để tối ưu chi tiêu, đặc biệt khi dòng tiền đang bị âm. Các khoản mua sắm như áo thun local brand cũng có thể được xem xét kỹ hơn trong những tháng tới để tập trung vào việc tiết kiệm.', 0, '2026-04-30 01:04:54'),
 (56, 1, 'forecast', 'Mình rất khuyến khích bạn tiếp tục phát huy các nguồn thu nhập phụ như freelance code dạo và tiền tip từ Anh Trân hay tool dự báo tài chính. Đây là những nỗ lực rất đáng khen và là chìa khóa để bạn cải thiện tình hình tài chính. Mình dự báo rằng với sự chủ động này, dòng tiền của bạn hoàn toàn có thể trở nên ổn định và thậm chí có dư trong những tháng tới, đặc biệt khi các khoản chi bất ngờ được kiểm soát tốt hơn.', 0, '2026-04-30 01:04:54'),
-(57, 1, 'anomaly', 'Tháng này, bạn không có bất kỳ khoản thu nhập nào nhưng vẫn chi tiêu 30.000đ cho bữa tối. Đây là một điểm cần chú ý ngay lập tức vì dòng tiền của bạn đang bị âm.', 0, '2026-05-05 00:15:44'),
+(57, 1, 'warning', 'Tháng này, bạn không có bất kỳ khoản thu nhập nào nhưng vẫn chi tiêu 30.000đ cho bữa tối. Đây là một điểm cần chú ý ngay lập tức vì dòng tiền của bạn đang bị âm.', 0, '2026-05-05 00:15:44'),
 (58, 1, 'advice', 'Để đảm bảo ổn định tài chính, bạn nên ưu tiên tìm kiếm nguồn thu nhập. Với khoản chi 30.000đ cho một bữa ăn khi chưa có thu nhập, bạn có thể cân nhắc tiết chế hơn hoặc xem xét lại tính cần thiết của những khoản chi tương tự trong tương lai nhé.', 0, '2026-05-05 00:15:44'),
 (59, 1, 'forecast', 'Nếu tình trạng thu nhập bằng 0 và vẫn có chi tiêu như vậy tiếp diễn, tài khoản của bạn sẽ nhanh chóng cạn kiệt hoặc bạn sẽ phải dùng đến tiền tiết kiệm/vay mượn, gây áp lực lớn về tài chính trong dài hạn.', 0, '2026-05-05 00:15:44'),
-(60, 1, 'summary', 'Xin chào! Tôi là Cố vấn Tài chính AI của CashFlow. Dưới đây là tình hình tài chính tháng này của Bạn:<br><br>\n<b><span style=\"color:green;\">Tổng thu: 18,500,000 đ</span></b><br>\n<b><span style=\"color:red;\">Tổng chi: 8,140,000 đ</span></b><br>\n<b><span style=\"color:blue;\">Số dư: 10,360,000 đ</span></b><br><br>\nTình hình tài chính của Bạn tháng này rất tích cực với khoản <span style=\"color:blue;\">thặng dư lớn</span>. Thu nhập chính đến từ <b>Lương</b> và <b>Freelance</b>.<br>\nVề chi tiêu, các khoản lớn nhất là <b>Nhà cửa</b> (tiền thuê nhà), <b>Đầu tư</b> (chứng khoán) và <b>Mua sắm</b>. Bạn đã duy trì được thói quen tiết kiệm/đầu tư rất tốt!', 0, '2026-05-10 22:37:06');
+(60, 1, 'summary', 'Xin chào! Tôi là Cố vấn Tài chính AI của CashFlow. Dưới đây là tình hình tài chính tháng này của Bạn:<br><br>\n<b><span style=\"color:green;\">Tổng thu: 18,500,000 đ</span></b><br>\n<b><span style=\"color:red;\">Tổng chi: 8,140,000 đ</span></b><br>\n<b><span style=\"color:blue;\">Số dư: 10,360,000 đ</span></b><br><br>\nTình hình tài chính của Bạn tháng này rất tích cực với khoản <span style=\"color:blue;\">thặng dư lớn</span>. Thu nhập chính đến từ <b>Lương</b> và <b>Freelance</b>.<br>\nVề chi tiêu, các khoản lớn nhất là <b>Nhà cửa</b> (tiền thuê nhà), <b>Đầu tư</b> (chứng khoán) và <b>Mua sắm</b>. Bạn đã duy trì được thói quen tiết kiệm/đầu tư rất tốt!', 0, '2026-05-10 22:37:06'),
+(61, 1, 'warning', '<p>Chào Bạn,</p>\n<p>Tôi là Cố vấn Tài chính AI của CashFlow. Dưới đây là tóm tắt tình hình tài chính tháng này của Bạn:</p>\n\n<p><b>1. Tình hình thu chi tổng quan:</b></p>\n<ul>\n    <li>Tổng thu nhập: <span style=\"color:green;\"><b>18,500,000 đ</b></span></li>\n    <li>Tổng chi tiêu: <span style=\"color:red;\"><b>8,170,000 đ</b></span></li>\n    <li>Tiết kiệm/Dư ra: <span style=\"color:blue;\"><b>10,330,000 đ</b></span></li>\n    <li>Tình hình tài chính của Bạn rất tích cực với khoản dư đáng kể.</li>\n</ul>\n\n<p><b>2. Thói quen tiêu dùng nổi bật:</b></p>\n<ul>\n    <li>Các khoản chi lớn nhất tập trung vào <span style=\"color:purple;\"><b>Nhà cửa (3,000,000 đ)</b></span> và <span style=\"color:purple;\"><b>Đầu tư (2,000,000 đ)</b></span>, cho thấy Bạn có kế hoạch tài chính dài hạn.</li>\n    <li>Bạn cũng chi cho <span style=\"color:purple;\"><b>Mua sắm (850,000 đ)</b></span> và <span style=\"color:purple;\"><b>Học tập (500,000 đ)</b></span>, thể hiện sự quan tâm đến bản thân và phát triển cá nhân.</li>\n    <li>Các chi phí thiết yếu như <span style=\"color:purple;\"><b>Ăn uống (230,000 đ)</b></span> và <span style=\"color:purple;\"><b>Di chuyển (90,000 đ)</b></span> được quản lý ở mức hợp lý.</li>\n</ul>\n\n<p><b>Lời khuyên:</b> Hãy tiếp tục phát huy thói quen tiết kiệm và đầu tư hiệu quả này để xây dựng nền tảng tài chính vững chắc, Bạn nhé!</p>', 0, '2026-05-11 15:31:37'),
+(62, 1, 'advice', 'Chào Bạn,<br>\n<br>\nVới vai trò là Cố vấn Tài chính AI từ hệ thống CashFlow, Tôi đã phân tích tình hình tài chính của Bạn trong kỳ gần đây và nhận thấy Bạn đang quản lý dòng tiền rất hiệu quả. <br>\n<br>\n<b>Tình hình tài chính tổng quan:</b><br>\n<ul>\n    <li>Tổng thu nhập: <b>18,500,000 đ</b></li>\n    <li>Tổng chi tiêu: <b>8,176,000 đ</b></li>\n    <li>Số dư tiền mặt: <b>10,324,000 đ</b></li>\n</ul>\n<br>\nBạn đang có một số dư tiền mặt rất ấn tượng, cho thấy khả năng kiếm tiền và quản lý chi tiêu cá nhân xuất sắc. Đây là một nền tảng vững chắc để đạt được các mục tiêu tài chính lớn hơn.<br>\n<br>\n<b>Phân tích chi tiêu chi tiết:</b><br>\nDưới đây là các khoản chi tiêu lớn nhất của Bạn theo từng danh mục:<br>\n<ul>\n    <li><b>Nhà cửa:</b> 3,000,000 đ (Thuê nhà) - Đây là khoản chi cố định và thiết yếu.</li>\n    <li><b>Đầu tư:</b> 2,000,000 đ (Chuyển vào quỹ chứng khoán) - Một khoản chi rất tốt, cho thấy Bạn đang có kế hoạch phát triển tài sản.</li>\n    <li><b>Mua sắm:</b> 850,000 đ (Mua áo sơ mi và quần jean mới) - Chi tiêu cho nhu cầu cá nhân.</li>\n    <li><b>Hóa đơn:</b> 650,000 đ (Tiền điện) - Chi phí sinh hoạt cơ bản.</li>\n    <li><b>Học tập:</b> 500,000 đ (Khóa học lập trình Web) - Khoản đầu tư vào bản thân, rất đáng giá.</li>\n    <li><b>Chợ, siêu thị:</b> 450,000 đ (Mua đồ ăn tuần) - Chi phí sinh hoạt hàng ngày.</li>\n    <li>Các danh mục khác như Sức khỏe, Ăn uống, Giải trí, Di chuyển chiếm phần nhỏ hơn trong tổng chi.</li>\n</ul>\n<br>\n<b>Lời khuyên hữu ích để tối ưu dòng tiền:</b><br>\nMặc dù Bạn đang có một dòng tiền cực kỳ khỏe mạnh, Tôi có một vài gợi ý nhỏ để giúp Bạn tối ưu hóa hơn nữa và đạt được các mục tiêu tài chính nhanh hơn:<br>\n<ul>\n    <li><b>Tăng cường đầu tư:</b> Với số dư tiền mặt lớn (hơn 10 triệu đồng mỗi tháng), Bạn có thể cân nhắc tăng cường khoản đầu tư hàng tháng vào quỹ chứng khoán hoặc các kênh đầu tư khác phù hợp với mục tiêu và mức độ chấp nhận rủi ro của Bạn. Việc này sẽ giúp tiền của Bạn \"làm việc\" hiệu quả hơn và gia tăng tài sản theo thời gian.</li>\n    <li><b>Đánh giá chi tiêu mua sắm:</b> Khoản 850,000 đ cho \"áo sơ mi và quần jean mới\" là khá lớn cho một lần mua sắm cá nhân. Bạn có thể xem xét:\n        <ul>\n            <li>Lập ngân sách cụ thể cho danh mục mua sắm để đảm bảo chi tiêu có kế hoạch và tránh lãng phí.</li>\n            <li>Tìm kiếm các chương trình khuyến mãi, giảm giá hoặc cân nhắc mua sắm vào các dịp đặc biệt để tối ưu chi phí.</li>\n            <li>Đánh giá lại nhu cầu thực sự trước khi mua để đảm bảo mỗi khoản chi đều mang lại giá trị và sự cần thiết tối ưu.</li>\n        </ul>\n    </li>\n    <li><b>Lên kế hoạch cho số tiền dư:</b> Bạn có một khoản tiền dư rất lớn mỗi tháng. Hãy đặt ra các mục tiêu cụ thể cho khoản tiền này, ví dụ:\n        <ul>\n            <li>Xây dựng quỹ khẩn cấp vững chắc (nếu chưa có đủ 3-6 tháng chi phí sinh hoạt).</li>\n            <li>Tiết kiệm cho mục tiêu dài hạn (mua nhà, mua xe, du lịch, học vấn cao hơn).</li>\n            <li>Đa dạng hóa danh mục đầu tư để giảm thiểu rủi ro và tăng cơ hội sinh lời.</li>\n        </ul>\n        Việc có một kế hoạch rõ ràng sẽ giúp Bạn sử dụng số tiền dư một cách có chủ đích và hiệu quả hơn, biến nó thành công cụ để đạt được các ước mơ tài chính.\n    </li>\n    <li><b>Tiếp tục duy trì thói quen tốt:</b> Bạn đang có những khoản chi rất hợp lý cho Học tập (đầu tư vào bản thân) và các chi phí sinh hoạt thiết yếu được kiểm soát tốt. Thu nhập từ công việc Freelance cũng là một điểm cộng lớn. Hãy tiếp tục phát huy những thói quen quản lý tài chính tích cực này để duy trì sự ổn định và phát triển tài chính.</li>\n</ul>\n<br>\nBạn đang đi đúng hướng trên con đường tài chính cá nhân. Hãy tiếp tục theo dõi và điều chỉnh kế hoạch để đạt được sự thịnh vượng bền vững nhé!<br>\n<br>\nTrân trọng,<br>\nCố vấn Tài chính AI của hệ thống CashFlow', 0, '2026-05-11 16:05:47');
 
 -- --------------------------------------------------------
 
@@ -207,7 +209,8 @@ INSERT INTO `transactions` (`id`, `user_id`, `category_id`, `amount`, `transacti
 (13, 1, 13, 2000000.00, '2026-05-02 08:00:00', 'Chuyển tiền vào quỹ chứng khoán', '2026-05-09 19:14:44'),
 (14, 1, 14, 500000.00, '2026-05-08 15:00:00', 'Mua khóa học lập trình Web', '2026-05-09 19:14:44'),
 (15, 1, 16, 30000.00, '2026-05-09 22:50:00', 'Ăn trưa căn tin', '2026-05-09 22:50:31'),
-(16, 1, 17, 30000.00, '2026-05-10 22:39:00', 'Đổ xăng', '2026-05-10 22:40:18');
+(16, 1, 17, 30000.00, '2026-05-10 22:39:00', 'Đổ xăng', '2026-05-10 22:40:18'),
+(17, 1, 17, 6000.00, '2026-05-11 16:03:00', 'đi bus', '2026-05-11 16:05:13');
 
 -- --------------------------------------------------------
 
@@ -233,7 +236,7 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `full_name`, `avatar_url`, `email`, `password_hash`, `is_first_login`, `login_token`, `created_at`, `updated_at`, `last_ai_consult_at`) VALUES
-(1, 'Nguyễn Văn Duy', '/assets/images/avatars/avatar_6a0096e1e5f3d_1778423521.jpg', 'nvduy180706@gmail.com', '$2y$10$xD16aTVcCHE6S2lefFijnOWqm4FrsC0Sh4SD1edx.tg7GaW4BM1sG', 0, NULL, '2026-04-28 21:47:09', '2026-05-10 22:37:06', '2026-05-10 22:37:06');
+(1, 'Nguyễn Văn Duy', '/assets/images/avatars/avatar_6a0096e1e5f3d_1778423521.jpg', 'nvduy180706@gmail.com', '$2y$10$1hAgJoWALkSALob2/WFdBecI7uYpzUKlc9twQwr.wblxY5FwFl.mC', 0, NULL, '2026-04-28 21:47:09', '2026-05-11 16:21:29', '2026-05-11 11:05:47');
 
 --
 -- Indexes for dumped tables
@@ -295,7 +298,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `ai_insights`
 --
 ALTER TABLE `ai_insights`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=61;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=63;
 
 --
 -- AUTO_INCREMENT for table `budgets`
@@ -319,7 +322,7 @@ ALTER TABLE `daily_notes`
 -- AUTO_INCREMENT for table `transactions`
 --
 ALTER TABLE `transactions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `users`

@@ -14,30 +14,42 @@ class AiAdvisorBUS
     }
 
     public function checkCooldown(int $userId): array {
-        $user = (new UserDAL())->getUserById($userId);
-        if (empty($user['last_ai_consult_at'])) return ['can_consult' => true];
+        $insights = $this->aiDal->getInsightsByUser($userId, 10);
+        $activeRequests = [];
+        $now = time();
         
-        $diff = time() - strtotime($user['last_ai_consult_at']);
-        
-        // Nếu diff bị âm (do tàn dư của lỗi lệch múi giờ cũ), ép nó về 0
-        if ($diff < 0) {
-            $diff = 0;
+        foreach ($insights as $msg) {
+            $msgTime = strtotime($msg['created_at']);
+            $diff = abs($now - $msgTime);
+            if ($diff <= 86400) {
+                $activeRequests[] = $msgTime;
+            }
         }
-
-        if ($diff < 86400) {
-            $hoursLeft = ceil((86400 - $diff) / 3600);
-            // Khóa an toàn: Đảm bảo không bao giờ hiện con số vượt quá 24h
-            if ($hoursLeft > 24) $hoursLeft = 24; 
+        
+        $used = count($activeRequests);
+        $max = 3; 
+        
+        if ($used >= $max) {
+            rsort($activeRequests); 
+            $oldestActive = min($activeRequests); 
             
-            return ['can_consult' => false, 'hours_left' => $hoursLeft];
+            $diff = abs($now - $oldestActive);
+            $hoursLeft = ceil((86400 - $diff) / 3600);
+            
+            if ($hoursLeft < 1) $hoursLeft = 1;
+            if ($hoursLeft > 24) $hoursLeft = 24;
+            
+            return ['can_consult' => false, 'hours_left' => $hoursLeft, 'used' => $used, 'max' => $max];
         }
         
-        return ['can_consult' => true];
+        return ['can_consult' => true, 'used' => $used, 'max' => $max, 'hours_left' => 0];
     }
 
     public function chatConsult(int $userId, string $type): array {
         $check = $this->checkCooldown($userId);
-        if (!$check['can_consult']) return ["status" => false, "message" => "Vui lòng chờ {$check['hours_left']} giờ nữa."];
+        if (!$check['can_consult']) {
+            return ["status" => false, "message" => "Vui lòng chờ {$check['hours_left']} giờ nữa để nhận thêm lượt phân tích mới."];
+        }
 
         $transactions = $this->analyticsDal->getTransactionsForReport($userId, ['month' => date('Y-m')], 1, 500);
         $res = $this->callPythonService(['type' => $type, 'transactions' => $transactions['data'] ?? []], '/api/chat');
@@ -67,10 +79,20 @@ class AiAdvisorBUS
     private function callPythonService(array $data, string $endpoint): array {
         $ch = curl_init('http://localhost:5000' . $endpoint);
         $jsonData = json_encode($data);
-        curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_POST => true, CURLOPT_POSTFIELDS => $jsonData, CURLOPT_HTTPHEADER => ['Content-Type: application/json'], CURLOPT_TIMEOUT => 15]);
+        
+        // TĂNG TIMEOUT LÊN 60 GIÂY ĐỂ TRÁNH LỖI HTTP 0
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true, 
+            CURLOPT_POST => true, 
+            CURLOPT_POSTFIELDS => $jsonData, 
+            CURLOPT_HTTPHEADER => ['Content-Type: application/json'], 
+            CURLOPT_TIMEOUT => 60 
+        ]);
+        
         $response = curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
+        
         if ($code !== 200) return ["status" => false, "error" => "HTTP $code"];
         return ["status" => true, "data" => json_decode($response, true)];
     }

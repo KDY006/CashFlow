@@ -1,7 +1,6 @@
 <?php 
 session_start();
 
-// Nếu người dùng đã đăng nhập thì không cho vào trang này nữa
 if (isset($_SESSION['user_id'])) {
     if (isset($_SESSION['is_first_login']) && $_SESSION['is_first_login'] == 1) {
         header("Location: setup-password.php");
@@ -20,45 +19,35 @@ if (isset($_SESSION['user_id'])) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
-        body {
-            background-color: #f0f2f5; /* Nền xám nhạt phong cách hiện đại */
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        .login-card {
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            border: none;
-        }
-        .brand-text {
-            color: #198754;
-            font-weight: 800;
-            font-size: 2rem;
-        }
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .auth-card { border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: none; }
+        .input-group-custom { border: 1px solid #dee2e6; border-radius: 12px; overflow: hidden; background-color: #f8f9fa; transition: all 0.2s; }
+        .input-group-custom:focus-within { border-color: #198754; background-color: #fff; box-shadow: 0 0 0 4px rgba(25, 135, 84, 0.1); }
+        .input-group-custom .input-group-text { background: transparent; border: none; padding-left: 1.25rem; color: #6c757d; }
+        .input-group-custom .form-control { background: transparent; border: none; box-shadow: none; padding-left: 0.5rem; }
     </style>
 </head>
 <body class="d-flex align-items-center justify-content-center" style="min-height: 100vh;">
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-md-5 col-lg-4">
+            <div class="col-12 col-md-6 col-lg-5 col-xl-4">
                 
                 <div class="text-center mb-4">
-                    <div class="brand-text">
-                        <i class="bi bi-wallet2"></i> CashFlow
-                    </div>
-                    <p class="text-muted mt-1">Quản lý tài chính thông minh</p>
+                    <h1 class="fw-bold text-success mb-0"><i class="bi bi-wallet2 me-2"></i>CashFlow</h1>
+                    <p class="text-muted mt-2 fw-semibold">Quản lý tài chính thông minh</p>
                 </div>
 
-                <div class="card login-card">
+                <div class="card auth-card bg-white">
                     <div class="card-body p-4 p-md-5">
-                        <h4 class="fw-bold mb-4 text-center text-dark">Đăng nhập</h4>
+                        <h4 class="fw-bold mb-4 text-center text-dark">Chào mừng trở lại!</h4>
                         
                         <?php if (isset($_SESSION['error'])): ?>
-                            <div class="alert alert-danger py-2 px-3 fs-6">
+                            <div class="alert alert-danger py-2 px-3 small rounded-3 fw-semibold border-0 bg-danger bg-opacity-10 text-danger">
                                 <i class="bi bi-exclamation-triangle-fill me-1"></i> <?= $_SESSION['error']; unset($_SESSION['error']); ?>
                             </div>
                         <?php endif; ?>
                         <?php if (isset($_SESSION['success'])): ?>
-                            <div class="alert alert-success py-2 px-3 fs-6">
+                            <div class="alert alert-success py-2 px-3 small rounded-3 fw-semibold border-0 bg-success bg-opacity-10 text-success">
                                 <i class="bi bi-check-circle-fill me-1"></i> <?= $_SESSION['success']; unset($_SESSION['success']); ?>
                             </div>
                         <?php endif; ?>
@@ -66,33 +55,37 @@ if (isset($_SESSION['user_id'])) {
                         <form action="../../controllers/AuthController.php" method="POST">
                             <input type="hidden" name="action" value="login">
                             
-                            <div class="mb-3">
-                                <input type="email" name="email" class="form-control form-control-lg fs-6" placeholder="Địa chỉ Email" required autofocus>
+                            <div class="mb-4">
+                                <div class="input-group input-group-lg input-group-custom">
+                                    <span class="input-group-text"><i class="bi bi-envelope-fill"></i></span>
+                                    <input type="email" name="email" class="form-control fw-semibold" placeholder="Địa chỉ Email" required autofocus>
+                                </div>
                             </div>
                             
-                            <div class="mb-3">
-                                <input type="password" name="password" class="form-control form-control-lg fs-6" placeholder="Mật khẩu" required>
+                            <div class="mb-4">
+                                <div class="input-group input-group-lg input-group-custom">
+                                    <span class="input-group-text"><i class="bi bi-shield-lock-fill"></i></span>
+                                    <input type="password" name="password" class="form-control fw-semibold" placeholder="Mật khẩu" required>
+                                </div>
                             </div>
                             
-                            <button type="submit" class="btn btn-success w-100 fw-bold fs-5 py-2 mb-3">Đăng Nhập</button>
-                            
-                            <div class="text-center mb-3">
-                                <a href="forgot-password.php" class="text-success text-decoration-none fw-semibold">Quên mật khẩu?</a>
+                            <div class="d-flex justify-content-end mb-4">
+                                <a href="forgot-password.php" class="text-success text-decoration-none small fw-bold">Quên mật khẩu?</a>
                             </div>
 
-                            <hr class="text-muted mb-4">
+                            <button type="submit" class="btn btn-success w-100 fw-bold py-3 rounded-pill shadow-sm mb-4">
+                                Đăng Nhập <i class="bi bi-arrow-right-circle ms-1"></i>
+                            </button>
                             
-                            <div class="text-center">
-                                <a href="register.php" class="btn btn-outline-success fw-bold px-4">Tạo tài khoản mới</a>
+                            <div class="text-center small fw-semibold text-muted">
+                                Chưa có tài khoản? <a href="register.php" class="text-success text-decoration-none fw-bold ms-1">Đăng ký ngay</a>
                             </div>
                         </form>
-
                     </div>
                 </div>
+                
             </div>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

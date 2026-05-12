@@ -102,12 +102,12 @@ foreach (array_reverse($chatHistory) as $msg) {
                 </div>
                 <?php foreach ($messages as $msg): ?>
                     <div class="d-flex mb-4 justify-content-end">
-                        <div class="chat-bubble bubble-user rounded-4">
+                        <div class="chat-bubble bubble-user rounded-4 shadow-sm">
                             <i class="bi bi-person-fill me-1"></i> <?= $typeToUserMsg[$msg['type']] ?? 'Tương tác AI' ?>
                         </div>
                     </div>
                     <div class="d-flex mb-4">
-                        <div class="chat-bubble bubble-ai rounded-4 w-100 border-start border-4 border-primary">
+                        <div class="chat-bubble bubble-ai rounded-4 shadow-sm w-100 border-start border-4 border-primary">
                             <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
                                 <span class="fw-bold text-primary small"><i class="bi bi-robot me-1"></i>Trợ lý Tài chính</span>
                                 <span class="text-muted" style="font-size: 0.75rem;"><i class="bi bi-clock me-1"></i><?= date('H:i', strtotime($msg['created_at'])) ?></span>

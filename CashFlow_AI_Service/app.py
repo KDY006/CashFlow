@@ -11,6 +11,8 @@ app = Flask(__name__)
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 client = genai.Client(api_key=GEMINI_API_KEY)
 
+name_model = 'gemini-3.1-flash-lite'
+
 @app.route('/api/parse', methods=['POST'])
 def parse_transaction():
     data = request.json
@@ -28,7 +30,7 @@ def parse_transaction():
     """
     try:
         response = client.models.generate_content(
-            model='gemini-2.5-flash', contents=prompt,
+            model=name_model, contents=prompt,
             config=types.GenerateContentConfig(response_mime_type="application/json", temperature=0.1)
         )
         return jsonify({"status": True, "data": json.loads(response.text)}), 200
@@ -60,12 +62,16 @@ def chat_consult():
     Nhiệm vụ: {cmd_map.get(t_type, cmd_map['summary'])}
     Yêu cầu trình bày:
     1. Xưng hô "Tôi" (Trợ lý AI) và "Bạn" (Người dùng).
-    2. Format kết quả bằng HTML thuần (dùng <b>, <br>, <ul>, <li>). 
-    3. KHÔNG bọc kết quả trong markdown (```html).
+    2. Câu trả lời phải NGẮN GỌN, súc tích và bắt buộc chia làm 3 phần rõ rệt:
+       - <b>TỔNG QUÁT:</b> (Nhận xét nhanh về tình hình tài chính hiện tại)
+       - <b>CỤ THỂ:</b> (Liệt kê các điểm đáng chú ý hoặc con số quan trọng)
+       - <b>KẾT LUẬN:</b> (Lời khuyên hoặc dự báo ngắn gọn)
+    3. Format kết quả bằng HTML thuần (dùng <b>, <br>, <ul>, <li>). 
+    4. KHÔNG bọc kết quả trong markdown (```html).
     """
     try:
         response = client.models.generate_content(
-            model='gemini-2.5-flash', contents=prompt,
+            model=name_model, contents=prompt,
             config=types.GenerateContentConfig(temperature=0.7)
         )
         return jsonify({"status": True, "answer": response.text}), 200

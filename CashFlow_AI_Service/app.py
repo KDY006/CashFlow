@@ -11,7 +11,7 @@ app = Flask(__name__)
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 client = genai.Client(api_key=GEMINI_API_KEY)
 
-name_model = 'gemini-3.1-flash-lite'
+name_model = os.getenv("GEMINI_API_NAME")
 
 @app.route('/api/parse', methods=['POST'])
 def parse_transaction():

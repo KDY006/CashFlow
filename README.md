@@ -56,7 +56,6 @@ Trước khi bắt đầu, hãy đảm bảo máy tính của bạn đã cài đ
 4.  Nhấn **"Create API key in new project"**.
 5.  Sao chép mã API Key vừa tạo.
 6.  Quay lại file `.env` ở Bước 5, tìm dòng `GEMINI_API_KEY=` và dán mã vào sau dấu `=`.
-7.  (Tùy chọn) Bạn có thể sửa dòng `GEMINI_API_NAME=` để đổi model (ví dụ: `gemini-1.5-flash`).
 
 ### Bước 7: Cài đặt và Chạy Server AI (Python)
 Đây là bước bắt buộc để sử dụng tính năng Chatbot AI.

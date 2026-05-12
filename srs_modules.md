@@ -9,10 +9,10 @@ Tài liệu này đặc tả chi tiết các yêu cầu chức năng (FR) và ph
 ### 1.1 Yêu cầu chức năng (Functional Requirements)
 | Mã FR | Tên chức năng | Mô tả chi tiết | Tiêu chí chấp nhận |
 | :--- | :--- | :--- | :--- |
-| **FR-101** | Đăng ký tài khoản | Tạo tài khoản bằng Email và Tên. | Gửi email kích hoạt trong 5p. Không trùng email. |
+| **FR-101** | Đăng ký tài khoản | Tạo tài khoản bằng Email và Tên. | Gửi email kích hoạt tài khoản. Không trùng email. |
 | **FR-102** | Đăng nhập | Truy cập bằng Email/Mật khẩu. | Sai thông tin báo lỗi. Bắt buộc đổi MK nếu lần đầu. |
 | **FR-103** | Thiết lập mật khẩu | Bắt buộc đổi mật khẩu an toàn. | MK tối thiểu 6 ký tự. Băm bằng Bcrypt. |
-| **FR-104** | Quên mật khẩu | Gửi mail đặt lại mật khẩu. | Link giới hạn thời gian (5 phút). |
+| **FR-104** | Quên mật khẩu | Gửi mail đặt lại mật khẩu. | Link xác thực an toàn qua Email. |
 | **FR-105** | Quản lý hồ sơ | Cập nhật avatar/thông tin. | Upload ảnh hợp lệ, tự động đổi tên file. |
 
 ### 1.2 Yêu cầu phi chức năng (Non-functional Requirements)

@@ -149,7 +149,7 @@ class UserBUS {
 
     private function sendActivationEmail($email, $token, $randomPassword, $subject) {
         $appUrl = $_ENV['APP_URL'] ?? 'http://localhost/CashFlow';
-        $loginLink = rtrim($appUrl, '/') . "/GUI/controllers/AuthController.php?action=verify_login&token=" . $token;
+        $loginLink = rtrim($appUrl, '/') . "/source/GUI/controllers/AuthController.php?action=verify_login&token=" . $token;
         
         $body = "
             <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>

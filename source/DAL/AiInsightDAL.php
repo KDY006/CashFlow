@@ -16,14 +16,15 @@ class AiInsightDAL
     /**
      * Thêm mới một Insight (lời khuyên/cảnh báo) từ AI vào CSDL.
      */
-    public function insertInsight(AiInsightDTO $insight): bool {
+    public function insertInsight(AiInsightDTO $insight) {
         $sql = "INSERT INTO ai_insights (user_id, type, content, is_read) 
-                VALUES (:user_id, :type, :content, 0)";
+                VALUES (:user_id, :type, :content, :is_read)";
         
         $stmt = $this->db->prepare($sql);
         $stmt->bindValue(':user_id', $insight->getUserId(), PDO::PARAM_INT);
         $stmt->bindValue(':type',    $insight->getType(),   PDO::PARAM_STR);
         $stmt->bindValue(':content', $insight->getContent(),PDO::PARAM_STR);
+        $stmt->bindValue(':is_read', $insight->getIsRead(),  PDO::PARAM_INT);
         
         return $stmt->execute();
     }
@@ -31,7 +32,7 @@ class AiInsightDAL
     /**
      * Lấy danh sách các Insight gần đây của người dùng.
      */
-    public function getInsightsByUser(int $user_id, int $limit = 10): array {
+    public function getInsightsByUser(int $user_id, int $limit = 10) {
         $sql = "SELECT id, type, content, is_read, created_at 
                 FROM ai_insights 
                 WHERE user_id = :user_id 
@@ -42,33 +43,17 @@ class AiInsightDAL
         $stmt->bindValue(':user_id',     $user_id, PDO::PARAM_INT);
         $stmt->bindValue(':limit_count', $limit,   PDO::PARAM_INT);
         $stmt->execute();
-
+        
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
      * Đánh dấu một Insight là đã đọc.
      */
-    public function markAsRead(int $insight_id, int $user_id): bool {
-        $sql = "UPDATE ai_insights 
-                SET is_read = 1 
-                WHERE id = :id AND user_id = :user_id";
-                
+    public function markAsRead(int $id) {
+        $sql = "UPDATE ai_insights SET is_read = 1 WHERE id = :id";
         $stmt = $this->db->prepare($sql);
-        $stmt->bindValue(':id',      $insight_id, PDO::PARAM_INT);
-        $stmt->bindValue(':user_id', $user_id,    PDO::PARAM_INT);
-        
-        return $stmt->execute();
-    }
-
-    public function deleteInsight(int $insight_id, int $user_id): bool {
-        $sql = "DELETE FROM ai_insights 
-                WHERE id = :id AND user_id = :user_id";
-                
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindValue(':id',      $insight_id, PDO::PARAM_INT);
-        $stmt->bindValue(':user_id', $user_id,    PDO::PARAM_INT);
-        
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
         return $stmt->execute();
     }
 }

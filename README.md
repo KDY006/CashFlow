@@ -55,7 +55,7 @@ Nhóm đã chuẩn bị sẵn 2 tài khoản với dữ liệu mẫu để thu�
 
 | VAI TRÒ | EMAIL ĐĂNG NHẬP | MẬT KHẨU |
 | :--- | :--- | :--- |
-| **QUẢN TRỊ VIÊN** | `nvduy180706@gmail.com` | `123456` |
+| **NGƯỜI DÙNG** | `nvduy180706@gmail.com` | `123456` |
 | **NGƯỜI DÙNG** | `kdyforwork@gmail.com` | `123456` |
 
 *   **Đường dẫn truy cập**: [http://localhost/CashFlow/source/](http://localhost/CashFlow/source/)

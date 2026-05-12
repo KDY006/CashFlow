@@ -1,69 +1,71 @@
 # 💰 CashFlow - Hệ thống Quản lý Chi tiêu tích hợp AI
 
-CashFlow là ứng dụng web giúp quản lý tài chính cá nhân một cách thông minh, tích hợp trí tuệ nhân tạo (Google Gemini AI) để phân tích thói quen tiêu dùng và đưa ra lời khuyên tài chính.
+Hệ thống Quản lý Chi tiêu tích hợp trí tuệ nhân tạo (Google Gemini AI) để phân tích thói quen tiêu dùng và đưa ra lời khuyên tài chính.
+
+*   **Tên dự án**: CashFlow - Smart Financial Management
+*   **Kho lưu trữ (GitHub)**: [https://github.com/KDY006/CashFlow.git](https://github.com/KDY006/CashFlow.git)
+*   **Công nghệ sử dụng**: PHP 8.x, MySQL, Python (Flask), Gemini AI.
 
 ---
 
-## 🚀 Hướng dẫn cài đặt
-
-### 1. Yêu cầu hệ thống
-*   **XAMPP**: Phiên bản PHP 8.1 trở lên và MySQL (MariaDB).
-*   **Python**: Phiên bản 3.9 trở lên (để chạy server AI).
-
-### 2. Bước 1: Thiết lập Web Server (PHP)
-1.  Copy thư mục dự án `CashFlow` vào thư mục `C:\xampp\htdocs\`.
-2.  Mở **XAMPP Control Panel**, nhấn **Start** cho cả **Apache** và **MySQL**.
-3.  Truy cập vào trang quản trị database: [http://localhost/phpmyadmin](http://localhost/phpmyadmin).
-4.  Tạo một database mới có tên là: `cashflow_db`.
-5.  Chọn database vừa tạo, nhấn vào tab **Import**, chọn file `database/cashflow_db.sql` trong thư mục dự án và nhấn **Go**.
-
-### 3. Bước 2: Cấu hình môi trường
-1.  Mở file `.env` tại thư mục gốc của dự án.
-2.  Đảm bảo các thông số Database chính xác (mặc định là `root` và không có password).
-3.  Cấu hình `GEMINI_API_KEY` (nếu bạn có key riêng) để sử dụng tính năng AI.
-4.  Cấu hình `MAIL_PASSWORD` (App Password của Gmail) để hệ thống có thể gửi email xác thực/quên mật khẩu.
-
-### 4. Bước 3: Chạy AI Service (Python)
-Đây là bước quan trọng để các tính năng Chatbot và Phân tích hoạt động.
-
-1.  Mở terminal hoặc Command Prompt (khuyên dùng **Terminal tích hợp trong Visual Studio Code**).
-2.  Di chuyển vào thư mục dịch vụ AI:
-    ```bash
-    cd CashFlow_AI_Service
-    ```
-3.  Cài đặt các thư viện cần thiết (chỉ cần chạy lần đầu):
-    ```bash
-    pip install flask google-genai python-dotenv
-    ```
-4.  Chạy server AI:
-    ```bash
-    python app.py
-    ```
-    > **⚠️ QUAN TRỌNG:** Phải giữ cửa sổ terminal này luôn mở trong suốt quá trình sử dụng ứng dụng. Server AI chạy trên cổng `5000`.
+## 1. YÊU CẦU MÔI TRƯỜNG CÀI ĐẶT
+*   **PHP**: Phiên bản >= 8.1 (Do sử dụng cú pháp mới và định kiểu nghiêm ngặt).
+*   **Cơ sở dữ liệu**: MySQL / MariaDB (Khuyên dùng XAMPP bản mới nhất).
+*   **Python**: Phiên bản >= 3.9 (Để chạy dịch vụ AI).
+*   **Trình duyệt**: Google Chrome, Microsoft Edge, Safari.
 
 ---
 
-## 🔑 Tài khoản dùng thử (Test Accounts)
+## 2. CÁC BƯỚC CÀI ĐẶT CHI TIẾT
 
-Bạn có thể sử dụng 2 tài khoản sau để đăng nhập và trải nghiệm đầy đủ dữ liệu mẫu:
+### Bước 1: Đưa mã nguồn vào Web Server
+*   Copy thư mục dự án `CashFlow` vào thư mục `C:\xampp\htdocs\`.
+*   Đảm bảo đường dẫn truy cập sẽ là `http://localhost/CashFlow/`.
 
-| STT | Email | Mật khẩu | Ghi chú |
-| :--- | :--- | :--- | :--- |
-| 1 | `nvduy180706@gmail.com` | `123456` | Tài khoản chính (Admin) |
-| 2 | `kdyforwork@gmail.com` | `123456` | Tài khoản phụ |
+### Bước 2: Khởi động máy chủ ảo
+*   Mở **XAMPP Control Panel**.
+*   Nhấn **Start** cho 2 module là **Apache** và **MySQL**.
+
+### Bước 3: Thiết lập Cơ sở dữ liệu (Database)
+*   Truy cập: [http://localhost/phpmyadmin](http://localhost/phpmyadmin).
+*   Tạo database mới với tên chính xác: `cashflow_db` (Bảng mã `utf8mb4_general_ci`).
+*   Chọn database vừa tạo, nhấn vào tab **Import**, chọn file `database/cashflow_db.sql` và nhấn **Go**.
+
+### Bước 4: Cấu hình môi trường (.env)
+*   Tìm file `.env.example` tại thư mục gốc dự án và đổi tên thành `.env`.
+*   **Cấu hình Database**: Mặc định là `DB_USER=root` và `DB_PASS=` (Rỗng).
+*   **Cấu hình AI**:
+    1. Truy cập [Google AI Studio](https://aistudio.google.com/) để lấy **API Key**.
+    2. Điền API Key vào dòng `GEMINI_API_KEY=`.
+    3. Điền tên model vào dòng `GEMINI_API_NAME=gemini-1.5-flash`.
+*   **Cấu hình Email**: Nhóm đã tích hợp sẵn tài khoản email test để gửi thư xác thực. Bạn có thể giữ nguyên để kiểm tra chức năng này.
+
+### Bước 5: Chạy dịch vụ AI (Python Server)
+Dịch vụ này xử lý các yêu cầu chatbot và phân tích dữ liệu.
+1.  Mở Terminal (trong VS Code hoặc CMD) tại thư mục `CashFlow_AI_Service`.
+2.  Cài đặt thư viện: `pip install flask google-genai python-dotenv`.
+3.  Chạy server: `python app.py`.
+    > **⚠️ Lưu ý**: Phải giữ cửa sổ Terminal này luôn mở khi sử dụng ứng dụng.
 
 ---
 
-## 🛠 Các tính năng chính
-*   **Quản lý giao dịch**: Thêm, sửa, xóa các khoản thu/chi.
-*   **AI Advisor (Cố vấn AI)**: Chat trực tiếp với AI để nhận:
-    *   **Cảnh báo**: Tìm các điểm chi tiêu bất thường.
-    *   **Lời khuyên**: Cách tiết kiệm tiền hiệu quả.
-    *   **Dự báo**: Tình hình tài chính cuối tháng.
-    *   **Tóm tắt**: Tổng quan thu chi trong tháng.
-*   **Phân tích & Thống kê**: Biểu đồ trực quan về dòng tiền.
-*   **Ngân sách & Ghi chú**: Lập kế hoạch chi tiêu hàng tháng.
+## 3. HƯỚNG DẪN ĐĂNG NHẬP VÀ TEST HỆ THỐNG
+Nhóm đã chuẩn bị sẵn 2 tài khoản với dữ liệu mẫu để thuận tiện cho việc chấm điểm:
+
+| VAI TRÒ | EMAIL ĐĂNG NHẬP | MẬT KHẨU |
+| :--- | :--- | :--- |
+| **QUẢN TRỊ VIÊN** | `nvduy180706@gmail.com` | `123456` |
+| **NGƯỜI DÙNG** | `kdyforwork@gmail.com` | `123456` |
+
+*   **Đường dẫn truy cập**: [http://localhost/CashFlow/](http://localhost/CashFlow/)
 
 ---
 
-*Phát triển bởi đội ngũ CashFlow Team.*
+## 4. GHI CHÚ QUAN TRỌNG VỀ LUỒNG TEST BẢO MẬT
+*   **Xác thực Email**: Khi đăng ký hoặc Admin thêm nhân viên mới, hệ thống sẽ gửi một email thực tế chứa link kích hoạt. Link này chỉ có hiệu lực trong **5 phút**.
+*   **Ép đổi mật khẩu**: Người dùng mới truy cập qua link email lần đầu sẽ được yêu cầu thiết lập mật khẩu mới ngay lập tức để đảm bảo an toàn.
+*   **Token AI**: Hệ thống giới hạn mỗi người dùng chỉ có **3 lượt** phân tích chuyên sâu mỗi 24 giờ để tối ưu hóa tài nguyên.
+
+---
+
+*Trân trọng cảm ơn Thầy/Cô đã dành thời gian đánh giá sản phẩm của nhóm!*

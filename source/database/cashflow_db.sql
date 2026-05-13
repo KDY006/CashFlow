@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 12, 2026 at 07:48 PM
+-- Generation Time: May 13, 2026 at 08:44 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -269,7 +269,7 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `full_name`, `avatar_url`, `email`, `password_hash`, `is_first_login`, `login_token`, `created_at`, `updated_at`, `last_ai_consult_at`) VALUES
 (1, 'Nguyễn Văn Duy', 'avatar_6a01bbbe83e2f_1778498494.jpg', 'nvduy180706@gmail.com', '$2y$10$oGEdQteEJTqaGcPurIM7M.jta386S114QeXbv0KpVuBF5eoxh3qmG', 0, NULL, '2026-04-28 21:47:09', '2026-05-13 00:46:36', '2026-05-12 19:24:10'),
-(5, 'Teest', '', 'kdyforwork@gmail.com', '$2y$10$/86jRY09EO/v95Qi.hvZ/OCA/GDasyyVc/IqgGEWWregFdKZHIQgO', 0, NULL, '2026-05-11 19:06:08', '2026-05-13 00:47:42', NULL);
+(5, 'Lê Văn Quý', '', 'kdyforwork@gmail.com', '$2y$10$/86jRY09EO/v95Qi.hvZ/OCA/GDasyyVc/IqgGEWWregFdKZHIQgO', 0, NULL, '2026-05-11 19:06:08', '2026-05-13 13:40:33', NULL);
 
 --
 -- Indexes for dumped tables
@@ -355,7 +355,7 @@ ALTER TABLE `daily_notes`
 -- AUTO_INCREMENT for table `transactions`
 --
 ALTER TABLE `transactions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
 
 --
 -- AUTO_INCREMENT for table `users`

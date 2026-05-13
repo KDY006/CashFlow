@@ -1,0 +1,166 @@
+/* Tệp: GUI/assets/css/style.css */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f0f2f5;
+    /* Màu nền xám nhạt đặc trưng của FB */
+    padding-bottom: 70px;
+    /* Chừa không gian cho bottom nav trên mobile */
+}
+
+/* ==========================================
+   DESKTOP HEADER & NAVIGATION (Phong cách FB)
+   ========================================== */
+.navbar {
+    background-color: #ffffff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.desktop-nav .nav-link {
+    color: #65676b;
+    font-weight: 600;
+    padding: 10px 15px;
+    margin: 0 5px;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.desktop-nav .nav-link:hover {
+    background-color: #f2f2f2;
+}
+
+/* Tab đang được chọn trên Desktop */
+.desktop-nav .nav-link.active {
+    color: #198754;
+    /* Xanh lá CashFlow */
+    background-color: #e8f5e9;
+    position: relative;
+}
+
+.desktop-nav .nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -12px;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background-color: #198754;
+    border-radius: 3px 3px 0 0;
+}
+
+/* ==========================================
+   MOBILE BOTTOM NAVIGATION
+   ========================================== */
+.bottom-nav {
+    display: none;
+    /* Ẩn trên desktop mặc định */
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: #ffffff;
+    box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.1);
+    z-index: 1030;
+    padding: 5px 0;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #65676b;
+    text-decoration: none;
+    font-size: 0.75rem;
+    padding: 5px 10px;
+    border-radius: 8px;
+}
+
+.bottom-nav-item i {
+    font-size: 1.5rem;
+    margin-bottom: 2px;
+}
+
+.bottom-nav-item.active {
+    color: #198754;
+}
+
+/* ==========================================
+   THIẾT LẬP RESPONSIVE (ĐIỂM CHUYỂN ĐỔI)
+   ========================================== */
+@media (max-width: 768px) {
+    .desktop-nav {
+        display: none !important;
+    }
+
+    .bottom-nav {
+        display: flex;
+    }
+
+    .navbar-brand span {
+        display: inline-block;
+        font-size: 1.2rem;
+    }
+}
+
+@media (min-width: 769px) {
+
+    /* Màn hình Desktop */
+    body {
+        padding-bottom: 0;
+        /* Không cần chừa đáy trên desktop */
+    }
+}
+
+/* ==========================================
+   FLOATING ACTION BUTTON (MOBILE) - BẢN HOÀN HẢO
+   ========================================== */
+.fab-container {
+    /* Tạo một vòng tròn bao bọc bên ngoài nút */
+    width: 68px;
+    height: 68px;
+    background-color: #f0f2f5;
+    /* QUAN TRỌNG: Trùng màu nền body để tạo ảo giác khoét lỗ */
+    border-radius: 50%;
+
+    /* Căn giữa nút xanh bên trong */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    /* Đẩy toàn bộ khối nổi lên trên thanh nav trắng */
+    margin-top: -35px;
+    flex-shrink: 0;
+    /* Khóa cứng kích thước */
+    z-index: 1040;
+}
+
+.fab-button {
+    /* Đây là nút xanh bên trong */
+    width: 52px;
+    height: 52px;
+    background-color: #198754 !important;
+    /* Xanh lá CashFlow */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    box-shadow: 0 4px 12px rgba(25, 135, 84, 0.4) !important;
+    transition: transform 0.2s ease, background-color 0.2s;
+}
+
+.fab-button i {
+    font-size: 1.8rem;
+    color: #ffffff !important;
+    margin-top: 2px;
+}
+
+.fab-button:hover,
+.fab-button:active {
+    background-color: #146c43 !important;
+    transform: scale(0.92);
+}

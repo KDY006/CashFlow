@@ -92,21 +92,17 @@ body {
    THIẾT LẬP RESPONSIVE (ĐIỂM CHUYỂN ĐỔI)
    ========================================== */
 @media (max-width: 768px) {
-
-    /* Màn hình Tablet & Mobile */
     .desktop-nav {
         display: none !important;
-        /* Giấu menu ở header đi */
     }
 
     .bottom-nav {
         display: flex;
-        /* Hiện thanh menu dưới đáy */
     }
 
     .navbar-brand span {
-        display: none;
-        /* Giấu bớt chữ ở logo cho gọn màn hình nhỏ */
+        display: inline-block;
+        font-size: 1.2rem;
     }
 }
 

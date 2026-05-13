@@ -19,6 +19,7 @@ if (isset($_SESSION['user_id'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng nhập - CashFlow</title>
+    <link rel="icon" href="../../assets/images/logo/logo.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -34,7 +35,6 @@ if (isset($_SESSION['user_id'])) {
             overflow: hidden;
         }
 
-        /* LEFT PANEL */
         .auth-left {
             flex: 1;
             display: flex;
@@ -101,7 +101,6 @@ if (isset($_SESSION['user_id'])) {
         .feature-dot.blue  { background: rgba(59,130,246,0.15);  color: #60a5fa; }
         .feature-dot.amber { background: rgba(245,158,11,0.15);  color: #fbbf24; }
 
-        /* RIGHT PANEL */
         .auth-right {
             width: 480px; flex-shrink: 0;
             background: #ffffff;
@@ -179,10 +178,9 @@ if (isset($_SESSION['user_id'])) {
     </style>
 </head>
 <body>
-    <!-- LEFT PANEL -->
     <div class="auth-left">
         <div class="brand-logo">
-            <div class="brand-icon"><i class="bi bi-wallet2"></i></div>
+            <img src="../../assets/images/logo/logo.png" alt="CashFlow Logo" style="width: 52px; height: 52px; object-fit: contain;">
             <span class="brand-name">CashFlow</span>
         </div>
         <div class="left-hero">
@@ -205,11 +203,10 @@ if (isset($_SESSION['user_id'])) {
         </div>
     </div>
 
-    <!-- RIGHT PANEL -->
     <div class="auth-right">
         <div class="auth-form-wrap">
             <div class="form-heading">
-                <h2>Chào mừng trở lại 👋</h2>
+                <h2>Chào mừng trở lại</h2>
                 <p>Đăng nhập để tiếp tục quản lý tài chính</p>
             </div>
 

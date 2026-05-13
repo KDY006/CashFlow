@@ -1,31 +1,25 @@
 <?php
-// Tệp: GUI/components/header.php
 
-// 1. CẤU HÌNH MENU DÙNG CHUNG
 $menuItems = [
     ['url' => '../analytics/dashboard.php', 'icon' => 'bi-house-door-fill', 'title' => 'Tổng quan', 'keyword' => 'dashboard'],
-        ['url' => '../calendar/index.php', 'icon' => 'bi-calendar3', 'title' => 'Lịch tháng', 'keyword' => 'calendar'],
+    ['url' => '../calendar/index.php', 'icon' => 'bi-calendar3', 'title' => 'Lịch tháng', 'keyword' => 'calendar'],
     ['url' => '../transactions/index.php', 'icon' => 'bi-cash-stack', 'title' => 'Giao dịch', 'keyword' => 'transactions'],
     ['url' => '../budgets/index.php', 'icon' => 'bi-bullseye', 'title' => 'Danh mục và Ngân sách', 'keyword' => 'budgets'],
     ['url' => '../ai/advisor.php', 'icon' => 'bi-robot', 'title' => 'Cố vấn AI', 'keyword' => 'ai'],
 ];
 $currentUri = $_SERVER['REQUEST_URI'];
 
-// 2. LẤY THÔNG TIN AVATAR MỚI NHẤT TỪ DATABASE
 $headerUserId = $_SESSION['user_id'] ?? null;
 $headerUserName = $_SESSION['user_name'] ?? 'Khách';
-// Avatar mặc định nếu chưa có ảnh
 $headerAvatar = 'https://ui-avatars.com/api/?name=' . urlencode($headerUserName) . '&background=198754&color=fff';
 
 if ($headerUserId) {
-    // Khởi tạo BUS để lấy dữ liệu mới nhất (đảm bảo đồng bộ ngay lập tức và tuân thủ 3 tầng)
     $headerUserBUS = new UserBUS();
     $headerUser = $headerUserBUS->getUserById($headerUserId);
     
     if ($headerUser) {
         $headerUserName = $headerUser['full_name'];
         if (!empty($headerUser['avatar_url'])) {
-            // Đường dẫn tương đối: Lùi 2 cấp (../../) để từ file trang hiện tại về thư mục gốc chứa assets
             $headerAvatar = '../../assets/images/avatars/' . ltrim($headerUser['avatar_url'], '/');
         }
     }
@@ -40,20 +34,18 @@ $csrfToken = CsrfHelper::generateToken();
 <meta name="csrf-token" content="<?= $csrfToken ?>">
 
 <script>
-    // FETCH INTERCEPTOR: Tự động đính kèm CSRF Token vào tất cả yêu cầu POST (AJAX)
     (function() {
         const originalFetch = window.fetch;
         window.fetch = async function(resource, config) {
             if (config && config.method && config.method.toUpperCase() === 'POST') {
                 const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
                 
-                // Nếu gửi bằng FormData
+                
                 if (config.body instanceof FormData) {
                     if (!config.body.has('csrf_token')) {
                         config.body.append('csrf_token', token);
                     }
                 } 
-                // Nếu gửi bằng chuỗi hoặc JSON
                 else if (typeof config.body === 'string') {
                     try {
                         let data = JSON.parse(config.body);
@@ -72,7 +64,6 @@ $csrfToken = CsrfHelper::generateToken();
 </script>
 
 <style>
-    /* CSS CHO NÚT THÊM GIAO DỊCH NỔI Ở GÓC DƯỚI (MOBILE) */
     .fab-mobile {
         position: fixed;
         bottom: 85px; 
@@ -100,7 +91,6 @@ $csrfToken = CsrfHelper::generateToken();
         align-items: center;
     }
 
-    /* CSS ĐẢM BẢO AVATAR HEADER LUÔN TRÒN VÀ KHÔNG BỊ MÉO */
     .header-avatar {
         width: 32px;
         height: 32px;
@@ -114,8 +104,11 @@ $csrfToken = CsrfHelper::generateToken();
 <nav class="navbar navbar-expand-md sticky-top py-2 px-3 bg-white shadow-sm">
     <div class="container-fluid align-items-center">
         
+        <link rel="icon" href="../../assets/images/logo/logo.png" type="image/png">
+
         <a class="navbar-brand text-success fw-bold d-flex align-items-center gap-2" href="../analytics/dashboard.php">
-            <i class="bi bi-wallet2 fs-3"></i><span>CashFlow</span>
+            <img src="../../assets/images/logo/logo.png" alt="CashFlow Logo" style="width: 35px; height: 35px; object-fit: contain;">
+            <span>CashFlow</span>
         </a>
 
         <ul class="navbar-nav mx-auto desktop-nav d-none d-md-flex flex-row gap-2">

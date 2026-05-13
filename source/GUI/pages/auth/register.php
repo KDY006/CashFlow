@@ -10,6 +10,7 @@ require_once __DIR__ . '/../../../helpers/CsrfHelper.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng ký tài khoản - CashFlow</title>
+    <link rel="icon" href="../../assets/images/logo/logo.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -64,7 +65,7 @@ require_once __DIR__ . '/../../../helpers/CsrfHelper.php';
 <body>
     <div class="auth-left">
         <div class="brand-logo">
-            <div class="brand-icon"><i class="bi bi-wallet2"></i></div>
+            <img src="../../assets/images/logo/logo.png" alt="CashFlow Logo" style="width: 52px; height: 52px; object-fit: contain;">
             <span class="brand-name">CashFlow</span>
         </div>
         <div class="left-hero">

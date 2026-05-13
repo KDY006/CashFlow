@@ -46,7 +46,6 @@ def chat_consult():
     total_in = sum(float(t['amount']) for t in transactions if t['type'] == 'income')
     total_out = sum(float(t['amount']) for t in transactions if t['type'] == 'expense')
 
-    # Đã sửa lại từ ngữ an toàn để tránh bị Gemini chặn
     cmd_map = {
         'warning': 'Hãy tìm ra các điểm bất thường, các khoản chi tiêu không hợp lý và đưa ra CẢNH BÁO nghiêm túc để tối ưu tài chính.',
         'advice': 'Hãy phân tích số liệu và đưa ra LỜI KHUYÊN hữu ích, thực tế để giúp tiết kiệm dòng tiền.',

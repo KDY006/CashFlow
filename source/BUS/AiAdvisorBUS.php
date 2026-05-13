@@ -82,7 +82,6 @@ class AiAdvisorBUS
         $ch = curl_init($baseUrl . $endpoint);
         $jsonData = json_encode($data);
         
-        // TĂNG TIMEOUT LÊN 60 GIÂY ĐỂ TRÁNH LỖI HTTP 0
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true, 
             CURLOPT_POST => true, 

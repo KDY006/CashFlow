@@ -2,7 +2,7 @@
 .env
 
 # BỎ QUA THƯ VIỆN PHP (Sẽ cài lại bằng composer install)
-/vendor/
+vendor/
 composer.lock
 
 # BỎ QUA CÁC FILE RÁC CỦA HỆ ĐIỀU HÀNH
